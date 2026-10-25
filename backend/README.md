@@ -61,6 +61,21 @@ Authorization: Bearer <token>
 
 Missing, invalid, or expired tokens return HTTP `401`. The password hash is never returned.
 
+## Role-based access control
+
+Use `authenticateToken` followed by `authorizeRoles` on protected routes:
+
+```js
+router.post(
+  "/materials",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  createMaterial
+);
+```
+
+Supported roles are `student`, `instructor`, and `admin`. `authorizeRoles` reads the role from the verified JWT context (`req.user`) and returns HTTP `403` for forbidden or invalid roles/configurations. Client-supplied body, query, or header roles are ignored. Admin accounts are assigned manually or through seeded data; self-registration remains restricted to Student and Instructor.
+
 ## Tests
 
 Run the automated registration and authentication tests from `backend/`:

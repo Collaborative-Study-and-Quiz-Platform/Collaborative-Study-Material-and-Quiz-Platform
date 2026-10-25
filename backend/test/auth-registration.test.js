@@ -8,6 +8,7 @@ const express = require("express");
 const request = require("supertest");
 const authenticateToken = require("../src/middleware/authenticateToken");
 const authorizeRoles = require("../src/middleware/authorizeRoles");
+const { createAdminAccount } = require("../src/scripts/seedAdmin");
 process.env.JWT_SECRET = "test-only-jwt-secret";
 process.env.JWT_EXPIRES_IN = "1h";
 const app = require("../src/app");
@@ -144,6 +145,22 @@ test("rejects admin self-registration", async () => {
   assert.equal(response.status, 400);
   assert.equal(response.body.errors.role, "Role must be student or instructor");
   assert.equal(await User.countDocuments(), 0);
+});
+
+test("creates an admin only through the authorized seed process", async () => {
+  const admin = await createAdminAccount({
+    name: "Platform Administrator",
+    email: " Admin@Example.COM ",
+    password: "admin-password"
+  });
+  const storedAdmin = await User.findOne({
+    email: "admin@example.com"
+  }).select("+password");
+
+  assert.equal(admin.role, "admin");
+  assert.equal(storedAdmin.role, "admin");
+  assert.notEqual(storedAdmin.password, "admin-password");
+  assert.equal(await bcrypt.compare("admin-password", storedAdmin.password), true);
 });
 
 test("logs in with valid credentials and returns safe user details", async () => {

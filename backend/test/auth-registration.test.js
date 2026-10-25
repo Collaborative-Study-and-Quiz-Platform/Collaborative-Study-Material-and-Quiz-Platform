@@ -4,7 +4,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
+const express = require("express");
 const request = require("supertest");
+const authenticateToken = require("../src/middleware/authenticateToken");
+const authorizeRoles = require("../src/middleware/authorizeRoles");
+const { createAdminAccount } = require("../src/scripts/seedAdmin");
 process.env.JWT_SECRET = "test-only-jwt-secret";
 process.env.JWT_EXPIRES_IN = "1h";
 const app = require("../src/app");
@@ -28,6 +32,48 @@ async function login(overrides = {}) {
     password: "secure-password",
     ...overrides
   });
+}
+
+function createRoleProtectedApp() {
+  const roleApp = express();
+  roleApp.use(express.json());
+  roleApp.get(
+    "/student",
+    authenticateToken,
+    authorizeRoles("student"),
+    (req, res) => res.json({ user: req.user })
+  );
+  roleApp.get(
+    "/instructor",
+    authenticateToken,
+    authorizeRoles("instructor"),
+    (req, res) => res.json({ user: req.user })
+  );
+  roleApp.get(
+    "/admin",
+    authenticateToken,
+    authorizeRoles("admin"),
+    (req, res) => res.json({ user: req.user })
+  );
+  roleApp.get(
+    "/invalid-configuration",
+    authenticateToken,
+    authorizeRoles("owner"),
+    (req, res) => res.json({ user: req.user })
+  );
+  return roleApp;
+}
+
+function tokenFor(role, overrides = {}) {
+  return jwt.sign(
+    {
+      sub: `${role}-user`,
+      role,
+      ...overrides
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
 }
 
 before(async () => {
@@ -99,6 +145,22 @@ test("rejects admin self-registration", async () => {
   assert.equal(response.status, 400);
   assert.equal(response.body.errors.role, "Role must be student or instructor");
   assert.equal(await User.countDocuments(), 0);
+});
+
+test("creates an admin only through the authorized seed process", async () => {
+  const admin = await createAdminAccount({
+    name: "Platform Administrator",
+    email: " Admin@Example.COM ",
+    password: "admin-password"
+  });
+  const storedAdmin = await User.findOne({
+    email: "admin@example.com"
+  }).select("+password");
+
+  assert.equal(admin.role, "admin");
+  assert.equal(storedAdmin.role, "admin");
+  assert.notEqual(storedAdmin.password, "admin-password");
+  assert.equal(await bcrypt.compare("admin-password", storedAdmin.password), true);
 });
 
 test("logs in with valid credentials and returns safe user details", async () => {
@@ -191,4 +253,89 @@ test("returns the authenticated user's safe details", async () => {
   assert.equal(response.body.user.email, "test@example.com");
   assert.equal(response.body.user.role, "instructor");
   assert.equal(response.body.user.password, undefined);
+});
+
+test("rejects unauthenticated role-protected requests with 401", async () => {
+  const response = await request(createRoleProtectedApp()).get("/student");
+
+  assert.equal(response.status, 401);
+});
+
+test("allows a student to access a student-permitted route", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/student")
+    .set("Authorization", `Bearer ${tokenFor("student")}`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.role, "student");
+});
+
+test("allows an instructor to access an instructor-permitted route", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/instructor")
+    .set("Authorization", `Bearer ${tokenFor("instructor")}`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.role, "instructor");
+});
+
+test("allows an admin to access an admin-permitted route", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/admin")
+    .set("Authorization", `Bearer ${tokenFor("admin")}`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.role, "admin");
+});
+
+test("rejects students and instructors from admin-only routes with 403", async () => {
+  const roleApp = createRoleProtectedApp();
+  const studentResponse = await request(roleApp)
+    .get("/admin")
+    .set("Authorization", `Bearer ${tokenFor("student")}`);
+  const instructorResponse = await request(roleApp)
+    .get("/admin")
+    .set("Authorization", `Bearer ${tokenFor("instructor")}`);
+
+  assert.equal(studentResponse.status, 403);
+  assert.equal(instructorResponse.status, 403);
+});
+
+test("rejects students from instructor-only routes with 403", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/instructor")
+    .set("Authorization", `Bearer ${tokenFor("student")}`);
+
+  assert.equal(response.status, 403);
+});
+
+test("rejects authenticated users with missing or invalid roles", async () => {
+  const roleApp = createRoleProtectedApp();
+  const missingRoleResponse = await request(roleApp)
+    .get("/student")
+    .set("Authorization", `Bearer ${tokenFor(undefined, { role: undefined })}`);
+  const invalidRoleResponse = await request(roleApp)
+    .get("/student")
+    .set("Authorization", `Bearer ${tokenFor("moderator")}`);
+
+  assert.equal(missingRoleResponse.status, 403);
+  assert.equal(invalidRoleResponse.status, 403);
+});
+
+test("fails closed when a route has an invalid role configuration", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/invalid-configuration")
+    .set("Authorization", `Bearer ${tokenFor("student")}`);
+
+  assert.equal(response.status, 403);
+});
+
+test("does not trust a client-supplied role header or request body", async () => {
+  const response = await request(createRoleProtectedApp())
+    .get("/admin")
+    .set("Authorization", `Bearer ${tokenFor("student")}`)
+    .set("X-Role", "admin")
+    .send({ role: "admin" });
+
+  assert.equal(response.status, 403);
 });

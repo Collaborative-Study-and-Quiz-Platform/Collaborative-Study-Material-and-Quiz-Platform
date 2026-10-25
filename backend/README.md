@@ -61,6 +61,32 @@ Authorization: Bearer <token>
 
 Missing, invalid, or expired tokens return HTTP `401`. The password hash is never returned.
 
+## Role-based access control
+
+Use `authenticateToken` followed by `authorizeRoles` on protected routes:
+
+```js
+router.post(
+  "/materials",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  createMaterial
+);
+```
+
+Supported roles are `student`, `instructor`, and `admin`. `authorizeRoles` reads the role from the verified JWT context (`req.user`) and returns HTTP `403` for forbidden or invalid roles/configurations. Client-supplied body, query, or header roles are ignored. Admin accounts are assigned manually or through seeded data; self-registration remains restricted to Student and Instructor.
+
+Create the initial Admin account through the seed command, not the public registration endpoint:
+
+```sh
+ADMIN_NAME="Platform Administrator" \
+ADMIN_EMAIL="admin@example.com" \
+ADMIN_PASSWORD="use-a-long-random-password" \
+npm run seed:admin
+```
+
+The command normalizes the email, hashes the password with bcrypt, and refuses to replace an existing non-admin account. Keep these values in the ignored `.env` file or provide them through a secret-management system; never commit them.
+
 ## Tests
 
 Run the automated registration and authentication tests from `backend/`:

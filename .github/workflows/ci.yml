@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - CSQP-F-001-User-Registration
+      - CSQP-F-002-User-Login-with-JWT
+      - CSQP-F-003-Role-Based-Access-Control
   pull_request:
     branches:
       - main

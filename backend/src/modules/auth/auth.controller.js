@@ -1,5 +1,8 @@
+
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../../models/User");
+const { getJwtConfig } = require("../../config/auth");
 
 const ALLOWED_ROLES = new Set(["student", "instructor"]);
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,6 +40,7 @@ function validateRegistrationInput(body) {
 
 async function register(req, res, next) {
   const errors = validateRegistrationInput(req.body || {});
+
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({
       status: "error",
@@ -51,6 +55,7 @@ async function register(req, res, next) {
 
   try {
     const passwordHash = await bcrypt.hash(password, 12);
+
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
@@ -75,4 +80,99 @@ async function register(req, res, next) {
   }
 }
 
-module.exports = { register, validateRegistrationInput };
+function validateLoginInput(body) {
+  const { email, password } = body;
+  const errors = {};
+
+  if (typeof email !== "string" || !email.trim()) {
+    errors.email = "Email is required";
+  } else if (!EMAIL_PATTERN.test(email.trim())) {
+    errors.email = "Email must be a valid email address";
+  }
+
+  if (typeof password !== "string" || !password) {
+    errors.password = "Password is required";
+  }
+
+  return errors;
+}
+
+async function login(req, res, next) {
+  const errors = validateLoginInput(req.body || {});
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({
+      status: "error",
+      message: "Login details are invalid",
+      errors
+    });
+  }
+
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      email: email.trim().toLowerCase()
+    }).select("+password");
+
+    const passwordMatches = user
+      ? await bcrypt.compare(password, user.password)
+      : false;
+
+    if (!user || !passwordMatches) {
+      return res.status(401).json({
+        status: "error",
+        message: "Invalid email or password"
+      });
+    }
+
+    const { secret, expiresIn } = getJwtConfig();
+
+    const token = jwt.sign(
+      {
+        sub: user._id.toString(),
+        role: user.role
+      },
+      secret,
+      { expiresIn }
+    );
+
+    return res.status(200).json({
+      status: "success",
+      message: "Login successful",
+      token,
+      user: user.toJSON()
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get the currently authenticated user's details
+async function getCurrentUser(req, res, next) {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(401).json({
+        status: "error",
+        message: "User account not found"
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      user: user.toJSON()
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  login,
+  register,
+  getCurrentUser,
+  validateLoginInput,
+  validateRegistrationInput
+};

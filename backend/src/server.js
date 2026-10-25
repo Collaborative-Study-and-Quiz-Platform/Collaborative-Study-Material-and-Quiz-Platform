@@ -9,6 +9,9 @@ async function startServer() {
     if (!process.env.MONGODB_URI) {
       throw new Error("MONGODB_URI is missing from the .env file");
     }
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing from the .env file");
+    }
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB Atlas connected successfully");

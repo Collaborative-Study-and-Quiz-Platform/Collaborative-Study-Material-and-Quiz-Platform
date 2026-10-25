@@ -32,8 +32,8 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
-      - name: Run backend tests
-        run: npm test
+      - name: Run backend tests with coverage
+        run: npm run test:coverage
 
   frontend-checks:
     name: Frontend Lint and Build

@@ -2,16 +2,15 @@ import { useState } from 'react'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-const initialForm = {
+const registrationDefaults = {
   name: '',
   email: '',
   password: '',
   role: 'student',
 }
 
-function validateForm(form) {
+function getRegistrationErrors(form) {
   const errors = {}
-
   if (!form.name.trim()) errors.name = 'Name is required.'
   if (!form.email.trim()) {
     errors.email = 'Email is required.'
@@ -26,165 +25,199 @@ function validateForm(form) {
   if (!['student', 'instructor'].includes(form.role)) {
     errors.role = 'Select Student or Instructor.'
   }
-
   return errors
 }
 
-function App() {
-  const [form, setForm] = useState(initialForm)
-  const [errors, setErrors] = useState({})
-  const [message, setMessage] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+function getLoginErrors(form) {
+  const errors = {}
+  if (!form.email.trim()) {
+    errors.email = 'Email is required.'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    errors.email = 'Enter a valid email address.'
+  }
+  if (!form.password) errors.password = 'Password is required.'
+  return errors
+}
 
-  function handleChange(event) {
-    const { name, value } = event.target
-    setForm((currentForm) => ({ ...currentForm, [name]: value }))
-    setErrors((currentErrors) => ({ ...currentErrors, [name]: undefined }))
-    setMessage(null)
+async function parseResponse(response) {
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const error = new Error(data.message || 'The request could not be completed.')
+    error.status = response.status
+    error.fieldErrors = data.errors || {}
+    throw error
+  }
+  return data
+}
+
+function App() {
+  const [mode, setMode] = useState('register')
+  const [registrationForm, setRegistrationForm] = useState(registrationDefaults)
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [feedback, setFeedback] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [session, setSession] = useState(null)
+
+  function switchMode(nextMode) {
+    setMode(nextMode)
+    setFieldErrors({})
+    setFeedback(null)
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault()
-    const validationErrors = validateForm(form)
+  function updateForm(setForm, event) {
+    const { name, value } = event.target
+    setForm((current) => ({ ...current, [name]: value }))
+    setFieldErrors((current) => ({ ...current, [name]: undefined }))
+    setFeedback(null)
+  }
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      setMessage({ type: 'error', text: 'Please correct the highlighted fields.' })
+  async function handleRegister(event) {
+    event.preventDefault()
+    const errors = getRegistrationErrors(registrationForm)
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors)
+      setFeedback({ type: 'error', text: 'Please correct the highlighted fields.' })
       return
     }
 
     setIsSubmitting(true)
-    setErrors({})
-    setMessage(null)
-
+    setFeedback(null)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      await parseResponse(await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          role: form.role,
+          ...registrationForm,
+          name: registrationForm.name.trim(),
+          email: registrationForm.email.trim(),
         }),
-      })
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 400 && data.errors) {
-          setErrors(data.errors)
-        }
-        const text = response.status === 409
-          ? 'An account with this email already exists.'
-          : data.message || 'Registration failed. Please try again.'
-        setMessage({ type: 'error', text })
-        return
-      }
-
-      setForm(initialForm)
-      setMessage({ type: 'success', text: 'Registration successful. Your account is ready.' })
-    } catch {
-      setMessage({
+      }))
+      setRegistrationForm(registrationDefaults)
+      setFeedback({ type: 'success', text: 'Registration successful. You can now log in.' })
+      setMode('login')
+    } catch (error) {
+      setFieldErrors(error.fieldErrors || {})
+      setFeedback({
         type: 'error',
-        text: 'Unable to reach the server. Check that the backend is running and try again.',
+        text: error.status === 409
+          ? 'An account with this email already exists.'
+          : error.message || 'Unable to reach the server.',
       })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  return (
-    <main className="registration-page">
-      <section className="registration-card" aria-labelledby="registration-title">
-        <div className="registration-heading">
+  async function handleLogin(event) {
+    event.preventDefault()
+    const errors = getLoginErrors(loginForm)
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors)
+      setFeedback({ type: 'error', text: 'Please correct the highlighted fields.' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setFeedback(null)
+    try {
+      const data = await parseResponse(await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: loginForm.email.trim(),
+          password: loginForm.password,
+        }),
+      }))
+      setLoginForm({ email: '', password: '' })
+      setSession({ token: data.token, user: data.user })
+      setFeedback({ type: 'success', text: 'Login successful.' })
+    } catch (error) {
+      setFieldErrors(error.fieldErrors || {})
+      setFeedback({
+        type: 'error',
+        text: error.status === 401
+          ? 'Invalid email or password.'
+          : error.message || 'Unable to reach the server.',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  function logout() {
+    setSession(null)
+    setFeedback({ type: 'success', text: 'You have been logged out.' })
+  }
+
+  if (session) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card" aria-labelledby="welcome-title">
           <p className="eyebrow">CSQP account</p>
-          <h1 id="registration-title">Create your account</h1>
-          <p>Join the Collaborative Study Material and Quiz Platform.</p>
+          <h1 id="welcome-title">Welcome back</h1>
+          <p className="session-detail">{session.user.name} · {session.user.role}</p>
+          {feedback && <p className={`feedback ${feedback.type}`} role="status">{feedback.text}</p>}
+          <button type="button" onClick={logout}>Log out</button>
+        </section>
+      </main>
+    )
+  }
+
+  const isRegistering = mode === 'register'
+  const form = isRegistering ? registrationForm : loginForm
+  const setForm = isRegistering ? setRegistrationForm : setLoginForm
+  const submit = isRegistering ? handleRegister : handleLogin
+
+  return (
+    <main className="auth-page">
+      <section className="auth-card" aria-labelledby="auth-title">
+        <div className="auth-heading">
+          <p className="eyebrow">CSQP account</p>
+          <h1 id="auth-title">{isRegistering ? 'Create your account' : 'Welcome back'}</h1>
+          <p>{isRegistering ? 'Join the Collaborative Study Material and Quiz Platform.' : 'Log in to continue learning.'}</p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="field">
-            <label htmlFor="name">Name</label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={form.name}
-              onChange={handleChange}
-              autoComplete="name"
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? 'name-error' : undefined}
-            />
-            {errors.name && <p className="field-error" id="name-error">{errors.name}</p>}
-          </div>
+        <div className="auth-tabs" role="tablist" aria-label="Account access">
+          <button type="button" role="tab" aria-selected={isRegistering} className={isRegistering ? 'active' : ''} onClick={() => switchMode('register')}>Register</button>
+          <button type="button" role="tab" aria-selected={!isRegistering} className={!isRegistering ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button>
+        </div>
 
+        <form onSubmit={submit} noValidate>
+          {isRegistering && (
+            <div className="field">
+              <label htmlFor="name">Name</label>
+              <input id="name" name="name" type="text" value={form.name} onChange={(event) => updateForm(setForm, event)} autoComplete="name" aria-invalid={Boolean(fieldErrors.name)} />
+              {fieldErrors.name && <p className="field-error">{fieldErrors.name}</p>}
+            </div>
+          )}
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              autoComplete="email"
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'email-error' : undefined}
-            />
-            {errors.email && <p className="field-error" id="email-error">{errors.email}</p>}
+            <input id="email" name="email" type="email" value={form.email} onChange={(event) => updateForm(setForm, event)} autoComplete="email" aria-invalid={Boolean(fieldErrors.email)} />
+            {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
           </div>
-
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="new-password"
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={errors.password ? 'password-error' : 'password-help'}
-            />
-            <p className="field-help" id="password-help">Use at least 8 characters.</p>
-            {errors.password && <p className="field-error" id="password-error">{errors.password}</p>}
+            <input id="password" name="password" type="password" value={form.password} onChange={(event) => updateForm(setForm, event)} autoComplete={isRegistering ? 'new-password' : 'current-password'} aria-invalid={Boolean(fieldErrors.password)} />
+            {isRegistering && <p className="field-help">Use at least 8 characters.</p>}
+            {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
           </div>
-
-          <fieldset className="field role-field">
-            <legend>Role</legend>
-            <div className="role-options">
-              <label className="role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value="student"
-                  checked={form.role === 'student'}
-                  onChange={handleChange}
-                />
-                <span>Student</span>
-              </label>
-              <label className="role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value="instructor"
-                  checked={form.role === 'instructor'}
-                  onChange={handleChange}
-                />
-                <span>Instructor</span>
-              </label>
-            </div>
-            {errors.role && <p className="field-error">{errors.role}</p>}
-          </fieldset>
-
-          {message && (
-            <p className={`form-message ${message.type}`} role="alert">
-              {message.text}
-            </p>
+          {isRegistering && (
+            <fieldset className="role-field">
+              <legend>Role</legend>
+              <div className="role-options">
+                {['student', 'instructor'].map((role) => (
+                  <label className="role-option" key={role}>
+                    <input type="radio" name="role" value={role} checked={form.role === role} onChange={(event) => updateForm(setForm, event)} />
+                    <span>{role[0].toUpperCase() + role.slice(1)}</span>
+                  </label>
+                ))}
+              </div>
+              {fieldErrors.role && <p className="field-error">{fieldErrors.role}</p>}
+            </fieldset>
           )}
-
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account...' : 'Create account'}
-          </button>
+          {feedback && <p className={`feedback ${feedback.type}`} role="alert">{feedback.text}</p>}
+          <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Please wait...' : isRegistering ? 'Create account' : 'Log in'}</button>
         </form>
       </section>
     </main>

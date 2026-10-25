@@ -1,9 +1,12 @@
 const assert = require("node:assert/strict");
 const { after, afterEach, before, test } = require("node:test");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 const request = require("supertest");
+process.env.JWT_SECRET = "test-only-jwt-secret";
+process.env.JWT_EXPIRES_IN = "1h";
 const app = require("../src/app");
 const User = require("../src/models/User");
 
@@ -15,6 +18,14 @@ async function register(overrides = {}) {
     email: "test@example.com",
     password: "secure-password",
     role: "student",
+    ...overrides
+  });
+}
+
+async function login(overrides = {}) {
+  return request(app).post("/api/auth/login").send({
+    email: "test@example.com",
+    password: "secure-password",
     ...overrides
   });
 }
@@ -88,4 +99,96 @@ test("rejects admin self-registration", async () => {
   assert.equal(response.status, 400);
   assert.equal(response.body.errors.role, "Role must be student or instructor");
   assert.equal(await User.countDocuments(), 0);
+});
+
+test("logs in with valid credentials and returns safe user details", async () => {
+  await register();
+  const response = await login();
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.email, "test@example.com");
+  assert.equal(response.body.user.password, undefined);
+  assert.equal(typeof response.body.token, "string");
+});
+
+test("rejects an incorrect password with a generic authentication error", async () => {
+  await register();
+  const response = await login({ password: "wrong-password" });
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.message, "Invalid email or password");
+});
+
+test("rejects an unknown email without revealing account existence", async () => {
+  const response = await login({ email: "unknown@example.com" });
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.message, "Invalid email or password");
+});
+
+test("rejects missing or malformed login inputs", async () => {
+  const missingInputs = await request(app).post("/api/auth/login").send({});
+  const malformedEmail = await login({ email: "not-an-email" });
+
+  assert.equal(missingInputs.status, 400);
+  assert.equal(missingInputs.body.errors.email, "Email is required");
+  assert.equal(missingInputs.body.errors.password, "Password is required");
+  assert.equal(malformedEmail.status, 400);
+  assert.equal(
+    malformedEmail.body.errors.email,
+    "Email must be a valid email address"
+  );
+});
+
+test("signs a verifiable JWT containing only the user id and role", async () => {
+  await register({ role: "instructor" });
+  const response = await login();
+  const payload = jwt.verify(response.body.token, process.env.JWT_SECRET);
+
+  assert.equal(payload.sub, (await User.findOne({ email: "test@example.com" }))._id.toString());
+  assert.equal(payload.role, "instructor");
+  assert.equal(payload.password, undefined);
+  assert.equal(payload.iat !== undefined, true);
+  assert.equal(payload.exp !== undefined, true);
+});
+
+test("does not expose password data in the login response", async () => {
+  await register();
+  const response = await login();
+  const responseText = JSON.stringify(response.body);
+
+  assert.equal(responseText.includes("secure-password"), false);
+  assert.equal(responseText.includes("$2b$"), false);
+  assert.equal(response.body.user.password, undefined);
+});
+
+test("rejects requests to the current-user route without a token", async () => {
+  const response = await request(app).get("/api/auth/me");
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.message, "Authentication required");
+});
+
+test("rejects requests to the current-user route with an invalid token", async () => {
+  const response = await request(app)
+    .get("/api/auth/me")
+    .set("Authorization", "Bearer invalid-token");
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.message, "Invalid or expired token");
+});
+
+test("returns the authenticated user's safe details", async () => {
+  await register({ role: "instructor" });
+  const loginResponse = await login();
+
+  const response = await request(app)
+    .get("/api/auth/me")
+    .set("Authorization", `Bearer ${loginResponse.body.token}`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status, "success");
+  assert.equal(response.body.user.email, "test@example.com");
+  assert.equal(response.body.user.role, "instructor");
+  assert.equal(response.body.user.password, undefined);
 });

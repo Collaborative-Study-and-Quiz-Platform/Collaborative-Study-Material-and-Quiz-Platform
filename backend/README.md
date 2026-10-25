@@ -2,9 +2,9 @@
 
 Node.js and Express REST API.
 
-Planned feature modules in src/modules: auth, material, quiz, questionBank, analytics-client, collaboration.
+Planned feature modules in `src/modules`: auth, material, quiz, questionBank, analytics-client, collaboration.
 
-## User registration
+## User Registration
 
 `POST /api/auth/register` creates a Student or Instructor account.
 
@@ -34,7 +34,36 @@ npm start
 
 Set `MONGODB_URI` in the ignored `.env` file before starting the server.
 
-Run the automated registration tests with:
+Set `JWT_SECRET` to a long, random value and optionally set `JWT_EXPIRES_IN` (default `1h`) in `.env`. See `.env.example`; never commit the real secret.
+
+## User Login
+
+`POST /api/auth/login` accepts:
+
+```json
+{
+  "email": "ada@example.com",
+  "password": "secure-password"
+}
+```
+
+A successful request returns HTTP `200` with a signed JWT and safe user details. Invalid or unknown credentials return HTTP `401` with the same message. Missing or malformed fields return HTTP `400`. The JWT contains the user ID (`sub`) and role.
+
+## Current User
+
+`GET /api/auth/me` returns the authenticated user's safe details.
+
+Include the JWT in the request header:
+
+```http
+Authorization: Bearer <token>
+```
+
+Missing, invalid, or expired tokens return HTTP `401`. The password hash is never returned.
+
+## Tests
+
+Run the automated registration and authentication tests from `backend/`:
 
 ```sh
 npm test

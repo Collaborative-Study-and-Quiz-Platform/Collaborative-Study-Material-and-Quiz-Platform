@@ -94,3 +94,33 @@ Run the automated registration and authentication tests from `backend/`:
 ```sh
 npm test
 ```
+
+## Question Bank
+
+All `/api/questions` routes need a JWT for an Instructor or Admin. Students get HTTP `403` and requests without a token get HTTP `401`.
+
+`POST /api/questions` adds a question:
+
+```json
+{
+  "text": "Which protocol is used to send email?",
+  "type": "mcq",
+  "options": ["SMTP", "FTP", "HTTP", "SSH"],
+  "correctAnswer": "SMTP",
+  "subject": "Computer Networks",
+  "topic": "Application Layer",
+  "difficulty": "easy"
+}
+```
+
+`type` is `mcq`, `true_false`, or `short_answer`, and `difficulty` is `easy`, `medium`, or `hard` (both case-insensitive). MCQ questions need 2 to 6 unique options, and `correctAnswer` must match one of them. True/False questions need `correctAnswer` set to `true` or `false` and take no options. Short-answer questions may include an optional model answer in `correctAnswer`. A successful request returns HTTP `201` with the saved question; invalid input returns `400`.
+
+`GET /api/questions` lists questions, newest first. Filter with any of `subject`, `topic`, `difficulty`, and `type`, for example `/api/questions?subject=Computer%20Networks&difficulty=easy`. Subject and topic match case-insensitively. Invalid `difficulty` or `type` values return `400`.
+
+`GET /api/questions/:id` returns one question, or `404` if it does not exist or was deleted.
+
+`PUT /api/questions/:id` edits a question. Send only the fields to change; the rest keep their current values. Changing a question away from `mcq` clears its options.
+
+`DELETE /api/questions/:id` soft-deletes a question. It disappears from the bank but stays in the database so existing quizzes are not affected.
+
+Only the Instructor who created a question, or an Admin, can edit or delete it. Other Instructors get `403`.

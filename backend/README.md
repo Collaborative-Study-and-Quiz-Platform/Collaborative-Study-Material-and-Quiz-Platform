@@ -124,3 +124,19 @@ All `/api/questions` routes need a JWT for an Instructor or Admin. Students get 
 `DELETE /api/questions/:id` soft-deletes a question. It disappears from the bank but stays in the database so existing quizzes are not affected.
 
 Only the Instructor who created a question, or an Admin, can edit or delete it. Other Instructors get `403`.
+
+## Study material upload
+
+`POST /api/materials` accepts a `multipart/form-data` request with a `file` field and
+the required `course`, `subject`, and `topic` tag fields. Only authenticated users
+with the `instructor` role can upload; requests from students and admins return `403`,
+and requests without a valid JWT return `401`.
+
+Only PDF, DOCX, and legacy PPT files are accepted. The default maximum file size is
+10 MiB (`MATERIAL_MAX_FILE_SIZE_BYTES=10485760`). Files are stored with generated
+names in `MATERIAL_UPLOAD_DIR` (default `./uploads/materials`) and their metadata,
+tags, and uploader ID are persisted in MongoDB. The upload directory should remain
+outside source control.
+
+The backend is authoritative for the configured file-size limit; the frontend
+submits files to the API and displays the server validation response.

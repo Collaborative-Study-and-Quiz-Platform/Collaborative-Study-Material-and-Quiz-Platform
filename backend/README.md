@@ -202,3 +202,24 @@ Only the answers sent are changed, and a `null` or empty `response` clears that 
 `GET /api/quizzes/:quizId/attempt` returns the attempt and its status: `in_progress`, `submitted`, or `auto_submitted`.
 
 The frontend shows the countdown from `expiresAt`, and the server enforces it. Once the deadline has passed by more than 30 seconds, the attempt is submitted automatically with every answer saved before the deadline, even if the browser never submits. Later saves or submits return HTTP `409`, as does starting a quiz that was already submitted.
+
+## Automatic Grading
+
+When an attempt is submitted, or auto-submitted at time-out, its MCQ and True/False questions are graded straight away against the quiz's own copy of the answer key. MCQ answers must match the correct option exactly (surrounding spaces are ignored), and True/False answers ignore case. A correct answer earns the question's full marks; a wrong or unanswered one earns `0`.
+
+The submit response and `GET /api/quizzes/:quizId/attempt` then include the score summary:
+
+```json
+{
+  "score": 6,
+  "maxScore": 8,
+  "percentage": 75,
+  "passed": true,
+  "gradingStatus": "complete",
+  "pendingMarks": 0,
+  "gradedAt": "2026-10-27T10:15:00.000Z",
+  "totalQuestions": 3
+}
+```
+
+`percentage` is rounded to two decimal places, and a score equal to the quiz's `passingScore` passes. Short-answer questions are not auto-graded: their marks are reported in `pendingMarks`, `gradingStatus` is `pending_manual`, and `passed` stays `null` until an Instructor grades them. The per-question results are stored with the attempt but not returned to students here, so the answer key stays hidden.

@@ -16,6 +16,72 @@ const answerSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const resultSchema = new mongoose.Schema(
+  {
+    questionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true
+    },
+    answered: {
+      type: Boolean,
+      required: true
+    },
+    // null means the question waits for manual grading (short answer)
+    isCorrect: {
+      type: Boolean,
+      default: null
+    },
+    marksAwarded: {
+      type: Number,
+      default: null
+    },
+    maxMarks: {
+      type: Number,
+      required: true
+    }
+  },
+  { _id: false }
+);
+
+const gradingSchema = new mongoose.Schema(
+  {
+    results: {
+      type: [resultSchema],
+      default: []
+    },
+    score: {
+      type: Number,
+      required: true
+    },
+    maxScore: {
+      type: Number,
+      required: true
+    },
+    pendingMarks: {
+      type: Number,
+      required: true
+    },
+    percentage: {
+      type: Number,
+      required: true
+    },
+    gradingStatus: {
+      type: String,
+      enum: ["complete", "pending_manual"],
+      required: true
+    },
+    passed: {
+      type: Boolean,
+      default: null
+    },
+    gradedAt: {
+      type: Date,
+      required: true
+    }
+  },
+  { _id: false }
+);
+
 const attemptSchema = new mongoose.Schema(
   {
     quiz: {
@@ -47,6 +113,10 @@ const attemptSchema = new mongoose.Schema(
     answers: {
       type: [answerSchema],
       default: []
+    },
+    grading: {
+      type: gradingSchema,
+      default: undefined
     }
   },
   { timestamps: true }

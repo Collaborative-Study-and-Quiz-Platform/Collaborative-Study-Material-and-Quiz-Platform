@@ -3,7 +3,8 @@ const {
   startAttempt,
   getAttempt,
   saveAnswers,
-  submitAttempt
+  submitAttempt,
+  getResult
 } = require("./attempt.controller");
 
 const authenticateToken = require("../../middleware/authenticateToken");
@@ -15,6 +16,7 @@ router.use(authenticateToken, authorizeRoles("student"));
 
 router.post("/start", startAttempt);
 router.get("/", getAttempt);
+router.get("/result", getResult);
 router.put("/answers", saveAnswers);
 router.post("/", submitAttempt);
 

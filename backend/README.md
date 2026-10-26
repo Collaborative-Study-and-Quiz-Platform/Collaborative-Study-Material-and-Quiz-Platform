@@ -124,3 +124,40 @@ All `/api/questions` routes need a JWT for an Instructor or Admin. Students get 
 `DELETE /api/questions/:id` soft-deletes a question. It disappears from the bank but stays in the database so existing quizzes are not affected.
 
 Only the Instructor who created a question, or an Admin, can edit or delete it. Other Instructors get `403`.
+
+## Quizzes
+
+All `/api/quizzes` routes need a JWT for an Instructor or Admin. Students get HTTP `403` and requests without a token get HTTP `401`.
+
+`POST /api/quizzes` creates a quiz:
+
+```json
+{
+  "title": "Networks Quiz 1",
+  "description": "Covers the application and transport layers.",
+  "durationMinutes": 30,
+  "passingScore": 60,
+  "showAnswers": true,
+  "questions": [
+    { "questionId": "<id of a question bank question>", "marks": 2 },
+    {
+      "question": {
+        "text": "Explain the three-way handshake.",
+        "type": "short_answer",
+        "subject": "Computer Networks",
+        "topic": "Transport Layer",
+        "difficulty": "hard"
+      },
+      "marks": 5
+    }
+  ]
+}
+```
+
+`durationMinutes` is a whole number from 1 to 600, and `passingScore` is a percentage from 0 to 100. `description` and `showAnswers` are optional; `showAnswers` defaults to `false` and controls whether students may later see the correct answers. A quiz has 1 to 100 questions. Each entry either uses an existing question bank question with `questionId`, or describes a new question in `question` using the same fields as `POST /api/questions`; new questions are also added to the question bank. `marks` is a whole number from 1 to 100 and defaults to 1. A successful request returns HTTP `201` with the quiz and its `totalMarks`; invalid input returns `400` with an error for each problem, for example `questions.1.question.options`.
+
+The quiz stores its own copy of every question, so editing or deleting a question in the bank later does not change existing quizzes.
+
+`GET /api/quizzes` lists quizzes, newest first. Instructors see the quizzes they created and Admins see all quizzes.
+
+`GET /api/quizzes/:id` returns one quiz. Other Instructors get `403`, and an unknown ID returns `404`.

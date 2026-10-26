@@ -161,3 +161,28 @@ The quiz stores its own copy of every question, so editing or deleting a questio
 `GET /api/quizzes` lists quizzes, newest first. Instructors see the quizzes they created and Admins see all quizzes.
 
 `GET /api/quizzes/:id` returns one quiz. Other Instructors get `403`, and an unknown ID returns `404`.
+
+## Quiz Attempts
+
+All `/api/quizzes/:quizId/attempt` routes need a JWT for a Student. Instructors and Admins get HTTP `403` and requests without a token get HTTP `401`. Each student has one attempt per quiz.
+
+`POST /api/quizzes/:quizId/attempt/start` starts the timer and returns HTTP `201` with the attempt: its `expiresAt` deadline, `remainingSeconds`, and the questions without their correct answers. Calling it again while the attempt is in progress returns HTTP `200` with the same attempt and deadline, so refreshing the page never resets the timer.
+
+`PUT /api/quizzes/:quizId/attempt/answers` saves answers during the attempt:
+
+```json
+{
+  "answers": [
+    { "questionId": "<quiz question _id>", "response": "SMTP" },
+    { "questionId": "<quiz question _id>", "response": true }
+  ]
+}
+```
+
+Only the answers sent are changed, and a `null` or empty `response` clears that answer. MCQ responses must match one of the options, True/False responses must be `true` or `false`, and short-answer responses are text of up to 5000 characters. Invalid answers return HTTP `422` with an error for each problem.
+
+`POST /api/quizzes/:quizId/attempt` submits the attempt. It accepts the same optional `answers` list as above, applied before submitting, and returns the attempt with `status` set to `submitted`.
+
+`GET /api/quizzes/:quizId/attempt` returns the attempt and its status: `in_progress`, `submitted`, or `auto_submitted`.
+
+The frontend shows the countdown from `expiresAt`, and the server enforces it. Once the deadline has passed by more than 30 seconds, the attempt is submitted automatically with every answer saved before the deadline, even if the browser never submits. Later saves or submits return HTTP `409`, as does starting a quiz that was already submitted.

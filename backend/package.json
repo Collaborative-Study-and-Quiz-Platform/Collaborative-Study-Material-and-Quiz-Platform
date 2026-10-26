@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "test": "node --test test/*.test.js",
-    "test:coverage": "c8 node --test test/*.test.js"
+    "test:coverage": "c8 node --test test/*.test.js",
+    "loadtest": "node loadtest/run-load-test.js"
   },
   "keywords": [],
   "author": "",

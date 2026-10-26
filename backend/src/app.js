@@ -3,6 +3,7 @@ const cors = require("cors");
 const authRoutes = require("./modules/auth/auth.routes");
 const questionBankRoutes = require("./modules/questionBank/questionBank.routes");
 const materialRoutes = require("./modules/material/material.routes");
+const quizRoutes = require("./modules/quiz/quiz.routes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionBankRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/quizzes", quizRoutes);
 
 app.use((error, req, res, next) => {
   console.error("Unhandled server error:", error);

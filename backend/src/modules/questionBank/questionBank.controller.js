@@ -334,5 +334,6 @@ module.exports = {
   updateQuestion,
   deleteQuestion,
   normalizeQuestionInput,
-  validateQuestionInput
+  validateQuestionInput,
+  toSavedFields
 };

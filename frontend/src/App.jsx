@@ -58,6 +58,7 @@ function App() {
   const [feedback, setFeedback] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [session, setSession] = useState(null)
+  const [materialForm, setMaterialForm] = useState({ file: null, course: '', subject: '', topic: '' })
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -150,6 +151,42 @@ function App() {
     setFeedback({ type: 'success', text: 'You have been logged out.' })
   }
 
+  async function handleMaterialUpload(event) {
+    event.preventDefault()
+    const { file, course, subject, topic } = materialForm
+    const extension = file?.name.split('.').pop()?.toLowerCase()
+    if (!file || !['pdf', 'docx', 'ppt'].includes(extension)) {
+      setFeedback({ type: 'error', text: 'Choose a PDF, DOCX, or PPT file.' })
+      return
+    }
+    if (![course, subject, topic].every((value) => value.trim())) {
+      setFeedback({ type: 'error', text: 'Course, subject, and topic are required.' })
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('course', course.trim())
+    formData.append('subject', subject.trim())
+    formData.append('topic', topic.trim())
+    setIsSubmitting(true)
+    setFeedback(null)
+    try {
+      await parseResponse(await fetch(`${API_BASE_URL}/api/materials`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.token}` },
+        body: formData,
+      }))
+      setMaterialForm({ file: null, course: '', subject: '', topic: '' })
+      event.target.reset()
+      setFeedback({ type: 'success', text: 'Study material uploaded successfully.' })
+    } catch (error) {
+      setFeedback({ type: 'error', text: error.message || 'Unable to upload the material.' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (session) {
     return (
       <main className="auth-page">
@@ -158,6 +195,22 @@ function App() {
           <h1 id="welcome-title">Welcome back</h1>
           <p className="session-detail">{session.user.name} · {session.user.role}</p>
           {feedback && <p className={`feedback ${feedback.type}`} role="status">{feedback.text}</p>}
+          {session.user.role === 'instructor' && (
+            <form onSubmit={handleMaterialUpload} noValidate>
+              <h2>Upload study material</h2>
+              <div className="field">
+                <label htmlFor="material-file">File</label>
+                <input id="material-file" type="file" accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint" onChange={(event) => setMaterialForm((current) => ({ ...current, file: event.target.files[0] }))} />
+              </div>
+              {['course', 'subject', 'topic'].map((field) => (
+                <div className="field" key={field}>
+                  <label htmlFor={`material-${field}`}>{field[0].toUpperCase() + field.slice(1)}</label>
+                  <input id={`material-${field}`} type="text" value={materialForm[field]} onChange={(event) => setMaterialForm((current) => ({ ...current, [field]: event.target.value }))} />
+                </div>
+              ))}
+              <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Uploading...' : 'Upload material'}</button>
+            </form>
+          )}
           <button type="button" onClick={logout}>Log out</button>
         </section>
       </main>

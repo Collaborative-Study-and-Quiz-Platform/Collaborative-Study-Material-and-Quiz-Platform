@@ -11,3 +11,6 @@ venv/
 .venv/
 .DS_Store
 *.log
+
+# Uploaded study materials (local storage)
+backend/uploads/

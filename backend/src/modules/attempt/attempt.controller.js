@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Attempt = require("../../models/Attempt");
 const Quiz = require("../../models/Quiz");
+const { gradeAttempt } = require("../grading/grading.service");
 
 // Extra time allowed after the timer ends, so a submit sent just before
 // time-out is not rejected because of network delay
@@ -55,20 +56,32 @@ function attemptView(attempt, quiz) {
     view.questions = studentQuestions(quiz);
   }
 
+  // Score summary only; the per-question review is part of View Quiz Results
+  if (attempt.grading) {
+    view.score = attempt.grading.score;
+    view.maxScore = attempt.grading.maxScore;
+    view.percentage = attempt.grading.percentage;
+    view.passed = attempt.grading.passed;
+    view.gradingStatus = attempt.grading.gradingStatus;
+    view.pendingMarks = attempt.grading.pendingMarks;
+    view.gradedAt = attempt.grading.gradedAt;
+  }
+
   return view;
 }
 
-// Ends an attempt. F-023 (Automatic Grading) will add scoring here
-async function finalizeAttempt(attempt, status) {
+// Ends an attempt and grades its objective questions straight away
+async function finalizeAttempt(attempt, quiz, status) {
   attempt.status = status;
   attempt.submittedAt = status === "auto_submitted" ? attempt.expiresAt : new Date();
+  attempt.grading = gradeAttempt(quiz, attempt.answers);
   await attempt.save();
   return attempt;
 }
 
-async function finalizeIfTimedOut(attempt) {
+async function finalizeIfTimedOut(attempt, quiz) {
   if (attempt.status === "in_progress" && hasTimedOut(attempt)) {
-    await finalizeAttempt(attempt, "auto_submitted");
+    await finalizeAttempt(attempt, quiz, "auto_submitted");
   }
   return attempt;
 }
@@ -203,7 +216,7 @@ async function loadAttempt(req, res, quiz) {
     return null;
   }
 
-  return finalizeIfTimedOut(attempt);
+  return finalizeIfTimedOut(attempt, quiz);
 }
 
 function closedResponse(res, attempt, quiz) {
@@ -249,7 +262,7 @@ async function startAttempt(req, res, next) {
       }
     }
 
-    await finalizeIfTimedOut(attempt);
+    await finalizeIfTimedOut(attempt, quiz);
 
     if (attempt.status !== "in_progress") {
       return closedResponse(res, attempt, quiz);
@@ -314,7 +327,7 @@ async function updateAttempt(req, res, next, submit) {
     applyAnswers(attempt, changes);
 
     if (submit) {
-      await finalizeAttempt(attempt, "submitted");
+      await finalizeAttempt(attempt, quiz, "submitted");
     } else {
       await attempt.save();
     }

@@ -4,6 +4,7 @@ const authRoutes = require("./modules/auth/auth.routes");
 const questionBankRoutes = require("./modules/questionBank/questionBank.routes");
 const materialRoutes = require("./modules/material/material.routes");
 const quizRoutes = require("./modules/quiz/quiz.routes");
+const attemptRoutes = require("./modules/attempt/attempt.routes");
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionBankRoutes);
 app.use("/api/materials", materialRoutes);
+// Registered before quizRoutes so students can reach their attempt routes
+app.use("/api/quizzes/:quizId/attempt", attemptRoutes);
 app.use("/api/quizzes", quizRoutes);
 
 app.use((error, req, res, next) => {

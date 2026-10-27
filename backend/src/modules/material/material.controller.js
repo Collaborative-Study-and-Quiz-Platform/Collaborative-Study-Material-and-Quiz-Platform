@@ -28,6 +28,8 @@ const SUPPORTED_TYPES = {
     ])
   }
 };
+const SEARCHABLE_FIELDS = ["originalFilename", "tags.course", "tags.subject", "tags.topic"];
+const MAX_QUERY_VALUE_LENGTH = 100;
 
 function getFileType(filename) {
   const extension = path.extname(filename || "").toLowerCase().slice(1);
@@ -63,6 +65,68 @@ function validateTags(body) {
   });
 
   return { tags, errors };
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getQueryValue(query, field) {
+  const value = query[field];
+  if (value === undefined) {
+    return "";
+  }
+  if (typeof value !== "string") {
+    return null;
+  }
+  const normalizedValue = value.trim();
+  return normalizedValue.length <= MAX_QUERY_VALUE_LENGTH ? normalizedValue : null;
+}
+
+async function listMaterials(req, res, next) {
+  const allowedQueryFields = new Set(["keyword", "course", "subject", "topic"]);
+  if (Object.keys(req.query).some((field) => !allowedQueryFields.has(field))) {
+    return res.status(400).json({
+      status: "error",
+      message: "Unsupported search parameter"
+    });
+  }
+
+  const query = {};
+  const keyword = getQueryValue(req.query, "keyword");
+  const course = getQueryValue(req.query, "course");
+  const subject = getQueryValue(req.query, "subject");
+  const topic = getQueryValue(req.query, "topic");
+
+  if ([keyword, course, subject, topic].some((value) => value === null)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Search and filter values must be text with 100 characters or fewer"
+    });
+  }
+
+  if (keyword) {
+    const pattern = new RegExp(escapeRegex(keyword), "i");
+    query.$or = SEARCHABLE_FIELDS.map((field) => ({ [field]: pattern }));
+  }
+  if (course) query["tags.course"] = new RegExp(`^${escapeRegex(course)}$`, "i");
+  if (subject) query["tags.subject"] = new RegExp(`^${escapeRegex(subject)}$`, "i");
+  if (topic) query["tags.topic"] = new RegExp(`^${escapeRegex(topic)}$`, "i");
+
+  try {
+    const materials = await Material.find(query)
+      .select("-storageLocation -__v")
+      .sort({ createdAt: -1, _id: -1 })
+      .lean();
+
+    return res.status(200).json({
+      status: "success",
+      count: materials.length,
+      materials
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function createMaterial(req, res, next) {
@@ -129,6 +193,7 @@ async function createMaterial(req, res, next) {
 
 module.exports = {
   createMaterial,
+  listMaterials,
   MAX_FILE_SIZE,
   SUPPORTED_TYPES
 };

@@ -51,4 +51,9 @@ materialSchema.set("toJSON", {
   }
 });
 
+materialSchema.index({ "tags.course": 1 });
+materialSchema.index({ "tags.subject": 1 });
+materialSchema.index({ "tags.topic": 1 });
+materialSchema.index({ originalFilename: 1 });
+
 module.exports = mongoose.model("Material", materialSchema);

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -37,6 +37,132 @@ function getLoginErrors(form) {
   }
   if (!form.password) errors.password = 'Password is required.'
   return errors
+}
+
+function MaterialLibrary({ token }) {
+  const [materials, setMaterials] = useState([])
+  const [filterOptions, setFilterOptions] = useState({ courses: [], subjects: [], topics: [] })
+  const [filters, setFilters] = useState({ keyword: '', course: '', subject: '', topic: '' })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadMaterials = useCallback(async (nextFilters, includeOptions = false) => {
+    setIsLoading(true)
+    setError('')
+    const params = new URLSearchParams()
+    Object.entries(nextFilters).forEach(([key, value]) => {
+      if (value.trim()) params.set(key, value.trim())
+    })
+
+    try {
+      const data = await parseResponse(await fetch(`${API_BASE_URL}/api/materials?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }))
+      setMaterials(data.materials || [])
+      if (includeOptions) {
+        setFilterOptions({
+          courses: [...new Set((data.materials || []).map((material) => material.tags?.course).filter(Boolean))].sort(),
+          subjects: [...new Set((data.materials || []).map((material) => material.tags?.subject).filter(Boolean))].sort(),
+          topics: [...new Set((data.materials || []).map((material) => material.tags?.topic).filter(Boolean))].sort(),
+        })
+      }
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to load study materials.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true), 0)
+    return () => window.clearTimeout(timer)
+  }, [loadMaterials])
+
+  function updateFilter(event) {
+    const { name, value } = event.target
+    setFilters((current) => ({ ...current, [name]: value }))
+  }
+
+  function submitFilters(event) {
+    event.preventDefault()
+    loadMaterials(filters)
+  }
+
+  function clearFilters() {
+    const emptyFilters = { keyword: '', course: '', subject: '', topic: '' }
+    setFilters(emptyFilters)
+    loadMaterials(emptyFilters)
+  }
+
+  return (
+    <section className="library" aria-labelledby="library-title">
+      <div className="library-heading">
+        <div>
+          <p className="eyebrow">Learn together</p>
+          <h1 id="library-title">Study Material Library</h1>
+          <p>Find resources by title, course, subject, or topic.</p>
+        </div>
+      </div>
+      <form className="library-filters" onSubmit={submitFilters}>
+        <div className="field library-search">
+          <label htmlFor="material-keyword">Search materials</label>
+          <input
+            id="material-keyword"
+            name="keyword"
+            type="search"
+            value={filters.keyword}
+            onChange={updateFilter}
+            placeholder="Search by title, course, subject or topic"
+          />
+        </div>
+        {[
+          ['course', 'Course', filterOptions.courses],
+          ['subject', 'Subject', filterOptions.subjects],
+          ['topic', 'Topic', filterOptions.topics],
+        ].map(([name, label, options]) => (
+          <div className="field" key={name}>
+            <label htmlFor={`material-filter-${name}`}>{label}</label>
+            <select id={`material-filter-${name}`} name={name} value={filters[name]} onChange={updateFilter}>
+              <option value="">All {label.toLowerCase()}s</option>
+              {options.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </div>
+        ))}
+        <div className="library-actions">
+          <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
+          <button type="button" className="secondary-button" onClick={clearFilters} disabled={isLoading}>Clear</button>
+        </div>
+      </form>
+      {error && <p className="feedback error" role="alert">{error}</p>}
+      <p className="results-count" role="status">{isLoading ? 'Loading materials...' : `${materials.length} material${materials.length === 1 ? '' : 's'} found`}</p>
+      {!isLoading && !error && materials.length === 0 && (
+        <div className="empty-state">
+          <h2>No materials found</h2>
+          <p>Try a different keyword or clear the filters to browse the library.</p>
+        </div>
+      )}
+      {!isLoading && materials.length > 0 && (
+        <div className="material-grid">
+          {materials.map((material) => (
+            <article className="material-card" key={material._id}>
+              <div className="material-card-top">
+                <span className="file-badge">{material.fileType?.toUpperCase() || 'FILE'}</span>
+                <time dateTime={material.createdAt}>
+                  {material.createdAt ? new Date(material.createdAt).toLocaleDateString() : 'Date unavailable'}
+                </time>
+              </div>
+              <h2>{material.originalFilename}</h2>
+              <dl className="material-metadata">
+                {material.tags?.course && <><dt>Course</dt><dd>{material.tags.course}</dd></>}
+                {material.tags?.subject && <><dt>Subject</dt><dd>{material.tags.subject}</dd></>}
+                {material.tags?.topic && <><dt>Topic</dt><dd>{material.tags.topic}</dd></>}
+              </dl>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
 }
 
 async function parseResponse(response) {
@@ -189,30 +315,43 @@ function App() {
 
   if (session) {
     return (
-      <main className="auth-page">
-        <section className="auth-card" aria-labelledby="welcome-title">
-          <p className="eyebrow">CSQP account</p>
-          <h1 id="welcome-title">Welcome back</h1>
-          <p className="session-detail">{session.user.name} · {session.user.role}</p>
-          {feedback && <p className={`feedback ${feedback.type}`} role="status">{feedback.text}</p>}
-          {session.user.role === 'instructor' && (
-            <form onSubmit={handleMaterialUpload} noValidate>
-              <h2>Upload study material</h2>
-              <div className="field">
-                <label htmlFor="material-file">File</label>
-                <input id="material-file" type="file" accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint" onChange={(event) => setMaterialForm((current) => ({ ...current, file: event.target.files[0] }))} />
+      <main className={session.user.role === 'student' ? 'dashboard-page' : 'auth-page'}>
+        {session.user.role === 'student' ? (
+          <div className="dashboard-shell">
+            <header className="dashboard-header">
+              <div>
+                <p className="eyebrow">CSQP account</p>
+                <p className="session-detail">Welcome, {session.user.name}</p>
               </div>
-              {['course', 'subject', 'topic'].map((field) => (
-                <div className="field" key={field}>
-                  <label htmlFor={`material-${field}`}>{field[0].toUpperCase() + field.slice(1)}</label>
-                  <input id={`material-${field}`} type="text" value={materialForm[field]} onChange={(event) => setMaterialForm((current) => ({ ...current, [field]: event.target.value }))} />
+              <button type="button" className="secondary-button logout-button" onClick={logout}>Log out</button>
+            </header>
+            <MaterialLibrary token={session.token} />
+          </div>
+        ) : (
+          <section className="auth-card" aria-labelledby="welcome-title">
+            <p className="eyebrow">CSQP account</p>
+            <h1 id="welcome-title">Welcome back</h1>
+            <p className="session-detail">{session.user.name} · {session.user.role}</p>
+            {feedback && <p className={`feedback ${feedback.type}`} role="status">{feedback.text}</p>}
+            {session.user.role === 'instructor' && (
+              <form onSubmit={handleMaterialUpload} noValidate>
+                <h2>Upload study material</h2>
+                <div className="field">
+                  <label htmlFor="material-file">File</label>
+                  <input id="material-file" type="file" accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint" onChange={(event) => setMaterialForm((current) => ({ ...current, file: event.target.files[0] }))} />
                 </div>
-              ))}
-              <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Uploading...' : 'Upload material'}</button>
-            </form>
-          )}
-          <button type="button" onClick={logout}>Log out</button>
-        </section>
+                {['course', 'subject', 'topic'].map((field) => (
+                  <div className="field" key={field}>
+                    <label htmlFor={`material-${field}`}>{field[0].toUpperCase() + field.slice(1)}</label>
+                    <input id={`material-${field}`} type="text" value={materialForm[field]} onChange={(event) => setMaterialForm((current) => ({ ...current, [field]: event.target.value }))} />
+                  </div>
+                ))}
+                <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Uploading...' : 'Upload material'}</button>
+              </form>
+            )}
+            <button type="button" onClick={logout}>Log out</button>
+          </section>
+        )}
       </main>
     )
   }

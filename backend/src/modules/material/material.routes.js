@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const authenticateToken = require("../../middleware/authenticateToken");
 const authorizeRoles = require("../../middleware/authorizeRoles");
-const { createMaterial, MAX_FILE_SIZE } = require("./material.controller");
+const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.controller");
 
 const router = express.Router();
 const upload = multer({
@@ -40,6 +40,13 @@ router.post(
     return next();
   }),
   createMaterial
+);
+
+router.get(
+  "/",
+  authenticateToken,
+  authorizeRoles("student"),
+  listMaterials
 );
 
 module.exports = router;

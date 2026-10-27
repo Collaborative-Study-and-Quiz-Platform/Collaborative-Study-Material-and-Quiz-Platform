@@ -223,3 +223,11 @@ The submit response and `GET /api/quizzes/:quizId/attempt` then include the scor
 ```
 
 `percentage` is rounded to two decimal places, and a score equal to the quiz's `passingScore` passes. Short-answer questions are not auto-graded: their marks are reported in `pendingMarks`, `gradingStatus` is `pending_manual`, and `passed` stays `null` until an Instructor grades them. The per-question results are stored with the attempt but not returned to students here, so the answer key stays hidden.
+
+## Quiz Results
+
+`GET /api/quizzes/:quizId/attempt/result` shows a Student their own result once the attempt is submitted or auto-submitted. It needs a Student JWT; Instructors and Admins get HTTP `403`. While the attempt is still in progress it returns HTTP `409`, and if the student never started the quiz it returns `404`.
+
+The result always includes the score: `score`, `maxScore`, `percentage`, `passingScore`, `passed`, `gradingStatus`, `pendingMarks`, `totalQuestions`, `answeredCount`, `correctCount`, `submittedAt`, and `gradedAt`.
+
+The answer review depends on the quiz's `showAnswers` setting, chosen by the Instructor when creating the quiz. When it is `true`, `answersVisible` is `true` and `review` lists every question with its `text`, `type`, `options`, the student's `yourResponse` (`null` if unanswered), the `correctAnswer`, `isCorrect`, `marksAwarded`, and `maxMarks`. Short-answer questions show `isCorrect` and `marksAwarded` as `null` until they are graded manually. When `showAnswers` is `false`, `answersVisible` is `false` and no review or answer key is returned.

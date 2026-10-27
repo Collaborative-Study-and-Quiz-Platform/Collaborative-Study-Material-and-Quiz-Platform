@@ -299,6 +299,91 @@ async function getAttempt(req, res, next) {
   }
 }
 
+// Per-question answer review. Only built when the Instructor enabled
+// showAnswers on the quiz, so the answer key is otherwise never sent
+function answerReview(attempt, quiz) {
+  const responses = new Map(
+    attempt.answers.map((answer) => [answer.questionId.toString(), answer.response])
+  );
+  const results = new Map(
+    attempt.grading.results.map((result) => [result.questionId.toString(), result])
+  );
+
+  return quiz.questions.map((question) => {
+    const id = question._id.toString();
+    const result = results.get(id);
+
+    return {
+      questionId: question._id,
+      text: question.text,
+      type: question.type,
+      options: question.options,
+      yourResponse: responses.has(id) ? responses.get(id) : null,
+      correctAnswer: question.correctAnswer || null,
+      isCorrect: result ? result.isCorrect : null,
+      marksAwarded: result ? result.marksAwarded : null,
+      maxMarks: question.marks
+    };
+  });
+}
+
+// Shows a student their result once the attempt is submitted (CSQP-F-025)
+async function getResult(req, res, next) {
+  try {
+    const quiz = await loadQuiz(req, res);
+    if (!quiz) {
+      return undefined;
+    }
+
+    const attempt = await loadAttempt(req, res, quiz);
+    if (!attempt) {
+      return undefined;
+    }
+
+    if (attempt.status === "in_progress") {
+      return sendError(res, 409, "Results are available after the quiz is submitted");
+    }
+
+    // Attempts submitted before automatic grading existed are graded now
+    if (!attempt.grading) {
+      attempt.grading = gradeAttempt(quiz, attempt.answers);
+      await attempt.save();
+    }
+
+    const { grading } = attempt;
+    const result = {
+      attemptId: attempt._id,
+      quizId: quiz._id,
+      quizTitle: quiz.title,
+      status: attempt.status,
+      submittedAt: attempt.submittedAt,
+      gradedAt: grading.gradedAt,
+      score: grading.score,
+      maxScore: grading.maxScore,
+      percentage: grading.percentage,
+      passingScore: quiz.passingScore,
+      passed: grading.passed,
+      gradingStatus: grading.gradingStatus,
+      pendingMarks: grading.pendingMarks,
+      totalQuestions: quiz.questions.length,
+      answeredCount: attempt.answers.length,
+      correctCount: grading.results.filter((item) => item.isCorrect === true).length,
+      answersVisible: quiz.showAnswers === true
+    };
+
+    if (result.answersVisible) {
+      result.review = answerReview(attempt, quiz);
+    }
+
+    return res.status(200).json({
+      status: "success",
+      result
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // Shared by saving progress and submitting
 async function updateAttempt(req, res, next, submit) {
   try {
@@ -355,6 +440,7 @@ module.exports = {
   getAttempt,
   saveAnswers,
   submitAttempt,
+  getResult,
   finalizeAttempt,
   GRACE_PERIOD_MS
 };

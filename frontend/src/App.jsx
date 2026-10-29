@@ -1,7 +1,9 @@
+
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 const registrationDefaults = {
   name: '',
   email: '',
@@ -39,10 +41,171 @@ function getLoginErrors(form) {
   return errors
 }
 
+async function parseResponse(response) {
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const error = new Error(data.message || 'The request could not be completed.')
+    error.status = response.status
+    error.fieldErrors = data.errors || {}
+    throw error
+  }
+  return data
+}
+
+function ForgotPassword({ onBack }) {
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setMessage('')
+    setError('')
+    setLoading(true)
+    try {
+      const data = await parseResponse(await fetch(
+        `${API_BASE_URL}/api/auth/forgot-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        },
+      ))
+      setMessage(data.message || 'If an account exists, reset instructions will be sent.')
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to request a password reset.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="auth-card" aria-labelledby="forgot-title">
+      <h1 id="forgot-title">Forgot password?</h1>
+      <p>Enter your registered email address to request a reset link.</p>
+      <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label htmlFor="reset-email">Email</label>
+          <input
+            id="reset-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </div>
+        {message && <p className="feedback success" role="status">{message}</p>}
+        {error && <p className="feedback error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading}>
+          {loading ? 'Sending...' : 'Send reset link'}
+        </button>
+      </form>
+      <button type="button" className="secondary-button" onClick={onBack}>
+        Back to login
+      </button>
+    </section>
+  )
+}
+
+function ResetPassword({ token, onBack }) {
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setMessage('')
+    setError('')
+
+    if (!token) {
+      setError('The reset link is missing its token.')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const data = await parseResponse(await fetch(
+        `${API_BASE_URL}/api/auth/reset-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword: password }),
+        },
+      ))
+      setMessage(data.message || 'Password reset successfully. You can now log in.')
+      setPassword('')
+      setConfirmPassword('')
+      window.history.replaceState({}, '', window.location.pathname)
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to reset your password.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="auth-card" aria-labelledby="reset-title">
+      <h1 id="reset-title">Reset password</h1>
+      <p>Choose a new password with at least 8 characters.</p>
+      {!token && <p className="feedback error" role="alert">The reset link is missing its token.</p>}
+      <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label htmlFor="new-password">New password</label>
+          <input
+            id="new-password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="confirm-password">Confirm new password</label>
+          <input
+            id="confirm-password"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+        </div>
+        {message && <p className="feedback success" role="status">{message}</p>}
+        {error && <p className="feedback error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading || !token || Boolean(message)}>
+          {loading ? 'Resetting...' : 'Reset password'}
+        </button>
+      </form>
+      <button type="button" className="secondary-button" onClick={onBack}>
+        Back to login
+      </button>
+    </section>
+  )
+}
+
 function MaterialLibrary({ token }) {
   const [materials, setMaterials] = useState([])
-  const [filterOptions, setFilterOptions] = useState({ courses: [], subjects: [], topics: [] })
-  const [filters, setFilters] = useState({ keyword: '', course: '', subject: '', topic: '' })
+  const [filterOptions, setFilterOptions] = useState({
+    courses: [], subjects: [], topics: [],
+  })
+  const [filters, setFilters] = useState({
+    keyword: '', course: '', subject: '', topic: '',
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -55,15 +218,16 @@ function MaterialLibrary({ token }) {
     })
 
     try {
-      const data = await parseResponse(await fetch(`${API_BASE_URL}/api/materials?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }))
+      const data = await parseResponse(await fetch(
+        `${API_BASE_URL}/api/materials?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      ))
       setMaterials(data.materials || [])
       if (includeOptions) {
         setFilterOptions({
-          courses: [...new Set((data.materials || []).map((material) => material.tags?.course).filter(Boolean))].sort(),
-          subjects: [...new Set((data.materials || []).map((material) => material.tags?.subject).filter(Boolean))].sort(),
-          topics: [...new Set((data.materials || []).map((material) => material.tags?.topic).filter(Boolean))].sort(),
+          courses: [...new Set((data.materials || []).map((m) => m.tags?.course).filter(Boolean))].sort(),
+          subjects: [...new Set((data.materials || []).map((m) => m.tags?.subject).filter(Boolean))].sort(),
+          topics: [...new Set((data.materials || []).map((m) => m.tags?.topic).filter(Boolean))].sort(),
         })
       }
     } catch (requestError) {
@@ -74,7 +238,10 @@ function MaterialLibrary({ token }) {
   }, [token])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true), 0)
+    const timer = window.setTimeout(
+      () => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true),
+      0,
+    )
     return () => window.clearTimeout(timer)
   }, [loadMaterials])
 
@@ -103,6 +270,7 @@ function MaterialLibrary({ token }) {
           <p>Find resources by title, course, subject, or topic.</p>
         </div>
       </div>
+
       <form className="library-filters" onSubmit={submitFilters}>
         <div className="field library-search">
           <label htmlFor="material-keyword">Search materials</label>
@@ -115,6 +283,7 @@ function MaterialLibrary({ token }) {
             placeholder="Search by title, course, subject or topic"
           />
         </div>
+
         {[
           ['course', 'Course', filterOptions.courses],
           ['subject', 'Subject', filterOptions.subjects],
@@ -122,25 +291,42 @@ function MaterialLibrary({ token }) {
         ].map(([name, label, options]) => (
           <div className="field" key={name}>
             <label htmlFor={`material-filter-${name}`}>{label}</label>
-            <select id={`material-filter-${name}`} name={name} value={filters[name]} onChange={updateFilter}>
+            <select
+              id={`material-filter-${name}`}
+              name={name}
+              value={filters[name]}
+              onChange={updateFilter}
+            >
               <option value="">All {label.toLowerCase()}s</option>
-              {options.map((option) => <option key={option} value={option}>{option}</option>)}
+              {options.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
             </select>
           </div>
         ))}
+
         <div className="library-actions">
-          <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
-          <button type="button" className="secondary-button" onClick={clearFilters} disabled={isLoading}>Clear</button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Searching...' : 'Search'}
+          </button>
+          <button type="button" className="secondary-button" onClick={clearFilters} disabled={isLoading}>
+            Clear
+          </button>
         </div>
       </form>
+
       {error && <p className="feedback error" role="alert">{error}</p>}
-      <p className="results-count" role="status">{isLoading ? 'Loading materials...' : `${materials.length} material${materials.length === 1 ? '' : 's'} found`}</p>
+      <p className="results-count" role="status">
+        {isLoading ? 'Loading materials...' : `${materials.length} material${materials.length === 1 ? '' : 's'} found`}
+      </p>
+
       {!isLoading && !error && materials.length === 0 && (
         <div className="empty-state">
           <h2>No materials found</h2>
           <p>Try a different keyword or clear the filters to browse the library.</p>
         </div>
       )}
+
       {!isLoading && materials.length > 0 && (
         <div className="material-grid">
           {materials.map((material) => (
@@ -165,17 +351,6 @@ function MaterialLibrary({ token }) {
   )
 }
 
-async function parseResponse(response) {
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    const error = new Error(data.message || 'The request could not be completed.')
-    error.status = response.status
-    error.fieldErrors = data.errors || {}
-    throw error
-  }
-  return data
-}
-
 function App() {
   const [mode, setMode] = useState('register')
   const [registrationForm, setRegistrationForm] = useState(registrationDefaults)
@@ -184,7 +359,13 @@ function App() {
   const [feedback, setFeedback] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [session, setSession] = useState(null)
-  const [materialForm, setMaterialForm] = useState({ file: null, course: '', subject: '', topic: '' })
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false)
+  const [resetToken, setResetToken] = useState(
+    () => new URLSearchParams(window.location.search).get('token') || '',
+  )
+  const [materialForm, setMaterialForm] = useState({
+    file: null, course: '', subject: '', topic: '',
+  })
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -313,6 +494,37 @@ function App() {
     }
   }
 
+  if (window.location.pathname === '/reset-password') {
+    return (
+      <main className="auth-page">
+        <ResetPassword
+          token={resetToken}
+          onBack={() => {
+            window.history.pushState({}, '', '/')
+            setResetToken('')
+            setForgotPasswordMode(false)
+            setMode('login')
+            setFeedback(null)
+          }}
+        />
+      </main>
+    )
+  }
+
+  if (forgotPasswordMode && !session) {
+    return (
+      <main className="auth-page">
+        <ForgotPassword
+          onBack={() => {
+            setForgotPasswordMode(false)
+            setMode('login')
+            setFeedback(null)
+          }}
+        />
+      </main>
+    )
+  }
+
   if (session) {
     return (
       <main className={session.user.role === 'student' ? 'dashboard-page' : 'auth-page'}>
@@ -338,15 +550,33 @@ function App() {
                 <h2>Upload study material</h2>
                 <div className="field">
                   <label htmlFor="material-file">File</label>
-                  <input id="material-file" type="file" accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint" onChange={(event) => setMaterialForm((current) => ({ ...current, file: event.target.files[0] }))} />
+                  <input
+                    id="material-file"
+                    type="file"
+                    accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint"
+                    onChange={(event) => setMaterialForm((current) => ({
+                      ...current, file: event.target.files[0],
+                    }))}
+                  />
                 </div>
                 {['course', 'subject', 'topic'].map((field) => (
                   <div className="field" key={field}>
-                    <label htmlFor={`material-${field}`}>{field[0].toUpperCase() + field.slice(1)}</label>
-                    <input id={`material-${field}`} type="text" value={materialForm[field]} onChange={(event) => setMaterialForm((current) => ({ ...current, [field]: event.target.value }))} />
+                    <label htmlFor={`material-${field}`}>
+                      {field[0].toUpperCase() + field.slice(1)}
+                    </label>
+                    <input
+                      id={`material-${field}`}
+                      type="text"
+                      value={materialForm[field]}
+                      onChange={(event) => setMaterialForm((current) => ({
+                        ...current, [field]: event.target.value,
+                      }))}
+                    />
                   </div>
                 ))}
-                <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Uploading...' : 'Upload material'}</button>
+                <button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Uploading...' : 'Upload material'}
+                </button>
               </form>
             )}
             <button type="button" onClick={logout}>Log out</button>
@@ -367,40 +597,61 @@ function App() {
         <div className="auth-heading">
           <p className="eyebrow">CSQP account</p>
           <h1 id="auth-title">{isRegistering ? 'Create your account' : 'Welcome back'}</h1>
-          <p>{isRegistering ? 'Join the Collaborative Study Material and Quiz Platform.' : 'Log in to continue learning.'}</p>
+          <p>
+            {isRegistering
+              ? 'Join the Collaborative Study Material and Quiz Platform.'
+              : 'Log in to continue learning.'}
+          </p>
         </div>
 
         <div className="auth-tabs" role="tablist" aria-label="Account access">
-          <button type="button" role="tab" aria-selected={isRegistering} className={isRegistering ? 'active' : ''} onClick={() => switchMode('register')}>Register</button>
-          <button type="button" role="tab" aria-selected={!isRegistering} className={!isRegistering ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button>
+          <button type="button" role="tab" aria-selected={isRegistering}
+            className={isRegistering ? 'active' : ''} onClick={() => switchMode('register')}>
+            Register
+          </button>
+          <button type="button" role="tab" aria-selected={!isRegistering}
+            className={!isRegistering ? 'active' : ''} onClick={() => switchMode('login')}>
+            Log in
+          </button>
         </div>
 
         <form onSubmit={submit} noValidate>
           {isRegistering && (
             <div className="field">
               <label htmlFor="name">Name</label>
-              <input id="name" name="name" type="text" value={form.name} onChange={(event) => updateForm(setForm, event)} autoComplete="name" aria-invalid={Boolean(fieldErrors.name)} />
+              <input id="name" name="name" type="text" value={form.name}
+                onChange={(event) => updateForm(setForm, event)} autoComplete="name"
+                aria-invalid={Boolean(fieldErrors.name)} />
               {fieldErrors.name && <p className="field-error">{fieldErrors.name}</p>}
             </div>
           )}
+
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" value={form.email} onChange={(event) => updateForm(setForm, event)} autoComplete="email" aria-invalid={Boolean(fieldErrors.email)} />
+            <input id="email" name="email" type="email" value={form.email}
+              onChange={(event) => updateForm(setForm, event)} autoComplete="email"
+              aria-invalid={Boolean(fieldErrors.email)} />
             {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
           </div>
+
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" value={form.password} onChange={(event) => updateForm(setForm, event)} autoComplete={isRegistering ? 'new-password' : 'current-password'} aria-invalid={Boolean(fieldErrors.password)} />
+            <input id="password" name="password" type="password" value={form.password}
+              onChange={(event) => updateForm(setForm, event)}
+              autoComplete={isRegistering ? 'new-password' : 'current-password'}
+              aria-invalid={Boolean(fieldErrors.password)} />
             {isRegistering && <p className="field-help">Use at least 8 characters.</p>}
             {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
           </div>
+
           {isRegistering && (
             <fieldset className="role-field">
               <legend>Role</legend>
               <div className="role-options">
                 {['student', 'instructor'].map((role) => (
                   <label className="role-option" key={role}>
-                    <input type="radio" name="role" value={role} checked={form.role === role} onChange={(event) => updateForm(setForm, event)} />
+                    <input type="radio" name="role" value={role} checked={form.role === role}
+                      onChange={(event) => updateForm(setForm, event)} />
                     <span>{role[0].toUpperCase() + role.slice(1)}</span>
                   </label>
                 ))}
@@ -408,9 +659,23 @@ function App() {
               {fieldErrors.role && <p className="field-error">{fieldErrors.role}</p>}
             </fieldset>
           )}
+
           {feedback && <p className={`feedback ${feedback.type}`} role="alert">{feedback.text}</p>}
-          <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Please wait...' : isRegistering ? 'Create account' : 'Log in'}</button>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Please wait...' : isRegistering ? 'Create account' : 'Log in'}
+          </button>
         </form>
+
+        {!isRegistering && (
+          <button type="button" className="secondary-button"
+            onClick={() => {
+              setForgotPasswordMode(true)
+              setFeedback(null)
+              setFieldErrors({})
+            }}>
+            Forgot password?
+          </button>
+        )}
       </section>
     </main>
   )

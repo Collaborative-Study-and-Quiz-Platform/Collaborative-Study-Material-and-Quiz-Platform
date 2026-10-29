@@ -75,3 +75,27 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+  analytics-tests:
+    name: Analytics Service Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: analytics-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: analytics-service/requirements.txt
+
+      - name: Install analytics dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run analytics tests
+        run: python -m unittest -v

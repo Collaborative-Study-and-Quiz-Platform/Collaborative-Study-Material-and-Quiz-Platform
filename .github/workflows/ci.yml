@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
-      - CSQP-F-001-User-Registration
-      - CSQP-F-002-User-Login-with-JWT
-      - CSQP-F-003-Role-Based-Access-Control
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   backend-tests:
@@ -34,8 +36,17 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
+      # c8 enforces the 70% lines/statements/functions/branches gate from .c8rc.json
       - name: Run backend tests with coverage
         run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+          if-no-files-found: ignore
 
   frontend-checks:
     name: Frontend Lint and Build

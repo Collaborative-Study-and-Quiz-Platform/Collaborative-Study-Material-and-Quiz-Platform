@@ -231,3 +231,11 @@ The submit response and `GET /api/quizzes/:quizId/attempt` then include the scor
 The result always includes the score: `score`, `maxScore`, `percentage`, `passingScore`, `passed`, `gradingStatus`, `pendingMarks`, `totalQuestions`, `answeredCount`, `correctCount`, `submittedAt`, and `gradedAt`.
 
 The answer review depends on the quiz's `showAnswers` setting, chosen by the Instructor when creating the quiz. When it is `true`, `answersVisible` is `true` and `review` lists every question with its `text`, `type`, `options`, the student's `yourResponse` (`null` if unanswered), the `correctAnswer`, `isCorrect`, `marksAwarded`, and `maxMarks`. Short-answer questions show `isCorrect` and `marksAwarded` as `null` until they are graded manually. When `showAnswers` is `false`, `answersVisible` is `false` and no review or answer key is returned.
+
+## Available Quizzes
+
+`GET /api/quizzes/available` lists the quizzes a Student can take, newest first. It needs a Student JWT; Instructors and Admins get HTTP `403` and use `GET /api/quizzes` instead. Each quiz includes its `title`, `description`, `durationMinutes`, `passingScore`, `totalMarks`, `questionCount`, and the `subjects` and `topics` of its questions, but never the questions or answers themselves.
+
+Each quiz also includes the student's own `attempt`, or `null` if they have not started it. The attempt shows its `status` (`in_progress`, `submitted`, or `auto_submitted`) and timing, plus `score`, `maxScore`, `percentage`, `passed`, and `gradingStatus` once it is graded. An attempt whose time ran out is auto-submitted when the list is loaded.
+
+For now every quiz is listed. CSQP-F-021 (Schedule Quiz) will limit the list to quizzes inside their scheduled window.

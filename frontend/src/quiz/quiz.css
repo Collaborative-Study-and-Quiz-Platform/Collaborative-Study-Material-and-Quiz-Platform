@@ -1,0 +1,58 @@
+/* Quiz screens. Built on the shared workspace styles in App.css */
+.quiz-heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.quiz-section-title { margin: 0; color: #202b42; font-size: 1.05rem; font-weight: 700; }
+.quiz-actions, .quiz-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.quiz-card-actions { margin-top: 14px; }
+
+.quiz-primary-button, .quiz-auto-button, .quiz-danger-button, .quiz-small-button { width: auto; min-height: 38px; padding: 0 14px; font-size: .8rem; white-space: nowrap; }
+.quiz-auto-button, .quiz-small-button { border: 1px solid #e4e6ef; }
+.quiz-small-button { justify-self: start; min-height: 34px; }
+.quiz-danger-button { color: #a3243f; background: #fff0f2; }
+.quiz-danger-button:hover:not(:disabled) { background: #ffe1e7; }
+.quiz-link-button { width: auto; padding: 6px 8px; color: #505ce2; background: transparent; font-size: .78rem; font-weight: 650; }
+.quiz-link-button:hover:not(:disabled) { background: #f4f3ff; }
+.quiz-link-button:disabled { cursor: not-allowed; opacity: .4; }
+
+.quiz-editor, .quiz-picker { margin: 0 0 20px; }
+.quiz-filters { margin-top: 0; }
+.quiz-picker .quiz-filters { padding: 0; }
+.quiz-picker .library-filters { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+
+.quiz-list, .quiz-item-list { display: grid; gap: 10px; }
+.quiz-item-list { margin: 0; padding: 0; list-style: none; }
+.quiz-card { min-width: 0; padding: 16px 18px; border: 1px solid #e5e8f0; border-radius: 12px; background: #fff; }
+.quiz-item-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; color: #27334a; font-size: .85rem; }
+
+.question-summary { display: grid; gap: 8px; min-width: 0; }
+.quiz-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.quiz-tag { padding: 4px 8px; border-radius: 999px; color: #596174; background: #f3f4f8; font-size: .7rem; font-weight: 650; }
+.question-text { margin: 0; color: #27334a; font-size: .92rem; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
+.question-options { display: grid; gap: 4px; margin: 0; padding-left: 20px; color: #596174; font-size: .84rem; }
+.question-options li.correct { color: #17633e; font-weight: 700; }
+.question-options li.correct::after { content: ' ✓'; }
+.question-answer { margin: 0; color: #17633e; font-size: .84rem; font-weight: 650; }
+.quiz-description { margin: 0 0 10px; color: #596174; font-size: .86rem; }
+.quiz-detail { display: grid; gap: 12px; padding: 0 19px 19px; }
+
+.question-fields { display: grid; gap: 16px; }
+.quiz-grid { display: grid; gap: 14px; }
+.quiz-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.quiz-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.quiz-textarea, .quiz-select { width: 100%; padding: 11px 13px; border: 1px solid #dce1eb; border-radius: 8px; color: #27334a; background: #fff; font: inherit; font-size: .86rem; }
+.quiz-textarea { resize: vertical; }
+.quiz-textarea:focus, .quiz-select:focus { border-color: #7146bd; outline: 3px solid rgba(113, 70, 189, .18); }
+.quiz-fieldset { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.quiz-fieldset legend { margin-bottom: 8px; color: #2a354c; font-size: .8rem; font-weight: 700; }
+.option-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.option-row input[type='radio'] { width: 18px; height: 18px; accent-color: #17633e; }
+.quiz-checkbox { align-self: end; min-height: 46px; font-size: .8rem; font-weight: 600; }
+.quiz-checkbox input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: #5964e8; }
+.quiz-marks { display: flex; align-items: center; gap: 8px; margin-right: auto; color: #2a354c; font-size: .8rem; font-weight: 700; }
+.quiz-marks input { width: 80px; padding: 7px 10px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .quiz-grid-2, .quiz-grid-3 { grid-template-columns: 1fr; }
+  .quiz-picker .library-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

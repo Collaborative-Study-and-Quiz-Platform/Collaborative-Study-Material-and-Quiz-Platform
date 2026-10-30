@@ -54,12 +54,10 @@ async function register(req, res, next) {
   const normalizedRole = role.trim().toLowerCase();
 
   try {
-    const passwordHash = await bcrypt.hash(password, 12);
-
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
-      password: passwordHash,
+      password,
       role: normalizedRole
     });
 

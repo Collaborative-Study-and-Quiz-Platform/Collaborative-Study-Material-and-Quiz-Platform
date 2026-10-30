@@ -100,7 +100,7 @@ test("returns materials and supports keyword, course, subject, topic, and combin
   assert.equal(all.body.materials[0].storageLocation, undefined);
 });
 
-test("handles empty filters, missing optional response metadata, and authorization safely", async () => {
+test("allows students and instructors to browse while preserving other authorization checks", async () => {
   const metadataMissing = materialData();
   delete metadataMissing.tags;
   await Material.collection.insertOne(metadataMissing);
@@ -109,13 +109,17 @@ test("handles empty filters, missing optional response metadata, and authorizati
   const missing = await browse("?keyword=missing");
   const unauthenticated = await request(app).get("/api/materials");
   const instructor = await browse("", "instructor");
+  const admin = await browse("", "admin");
 
   assert.equal(empty.status, 200);
   assert.equal(empty.body.materials.length, 1);
   assert.equal(empty.body.materials[0].tags, undefined);
   assert.equal(missing.status, 200);
   assert.equal(unauthenticated.status, 401);
-  assert.equal(instructor.status, 403);
+  assert.equal(instructor.status, 200);
+  assert.equal(instructor.body.count, 1);
+  assert.equal(instructor.body.materials[0].originalFilename, "Operating Systems Processes.pdf");
+  assert.equal(admin.status, 403);
 });
 
 test("rejects invalid query parameter types and oversized values", async () => {

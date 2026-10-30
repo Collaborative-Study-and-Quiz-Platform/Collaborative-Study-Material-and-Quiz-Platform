@@ -45,7 +45,7 @@ router.post(
 router.get(
   "/",
   authenticateToken,
-  authorizeRoles("student"),
+  authorizeRoles("student", "instructor"),
   listMaterials
 );
 

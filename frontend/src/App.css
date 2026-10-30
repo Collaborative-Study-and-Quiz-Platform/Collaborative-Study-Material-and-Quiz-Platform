@@ -71,3 +71,31 @@ button:disabled { cursor: wait; opacity: .65; }
 @media (max-width: 520px) { .auth-card { padding: 28px 22px; } .role-options { flex-direction: column; } }
 @media (max-width: 850px) { .library-filters { grid-template-columns: repeat(2, 1fr); } .library-search, .library-actions { grid-column: span 2; } }
 @media (max-width: 520px) { .dashboard-page { padding: 20px 14px 36px; } .dashboard-header { align-items: flex-start; } .library { padding: 22px 16px; } .library-filters { display: flex; flex-direction: column; align-items: stretch; } .library-search, .library-actions { width: 100%; } .library-actions button { flex: 1; } }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+.library-filters select:focus-visible {
+  outline: 3px solid #242033;
+  outline-offset: 3px;
+}
+
+.dashboard-header > div,
+.library-filters > .field,
+.material-card {
+  min-width: 0;
+}
+
+@media (max-width: 360px) {
+  .auth-page {
+    padding: 20px 12px;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .dashboard-header {
+    flex-wrap: wrap;
+  }
+}

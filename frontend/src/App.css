@@ -287,3 +287,31 @@ button:disabled { cursor: wait; opacity: .65; }
   .auth-page-split .auth-form-card { padding: 23px 18px 27px; }
   .auth-form-card .role-options { flex-direction: column; }
 }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+.library-filters select:focus-visible {
+  outline: 3px solid #242033;
+  outline-offset: 3px;
+}
+
+.dashboard-header > div,
+.library-filters > .field,
+.material-card {
+  min-width: 0;
+}
+
+@media (max-width: 360px) {
+  .auth-page {
+    padding: 20px 12px;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .dashboard-header {
+    flex-wrap: wrap;
+  }
+}

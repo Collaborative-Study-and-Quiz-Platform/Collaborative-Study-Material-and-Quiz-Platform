@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import './quiz/quiz.css'
@@ -970,12 +969,12 @@ function App() {
             </p>
           </div>
 
-          <div className="auth-tabs" role="tablist" aria-label="Account access">
-            <button type="button" role="tab" aria-selected={isRegistering}
+          <div className="auth-tabs" role="group" aria-label="Account access">
+            <button type="button" aria-pressed={isRegistering}
               className={isRegistering ? 'active' : ''} onClick={() => switchMode('register')}>
               Register
             </button>
-            <button type="button" role="tab" aria-selected={!isRegistering}
+            <button type="button" aria-pressed={!isRegistering}
               className={!isRegistering ? 'active' : ''} onClick={() => switchMode('login')}>
               Log in
             </button>
@@ -987,8 +986,9 @@ function App() {
                 <label htmlFor="name">Name</label>
                 <input id="name" name="name" type="text" value={form.name}
                   onChange={(event) => updateForm(setForm, event)} autoComplete="name"
-                  aria-invalid={Boolean(fieldErrors.name)} />
-                {fieldErrors.name && <p className="field-error">{fieldErrors.name}</p>}
+                  aria-invalid={Boolean(fieldErrors.name)}
+                  aria-describedby={fieldErrors.name ? 'name-error' : undefined} />
+                {fieldErrors.name && <p className="field-error" id="name-error">{fieldErrors.name}</p>}
               </div>
             )}
 
@@ -996,8 +996,9 @@ function App() {
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" value={form.email}
                 onChange={(event) => updateForm(setForm, event)} autoComplete="email"
-                aria-invalid={Boolean(fieldErrors.email)} />
-              {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined} />
+              {fieldErrors.email && <p className="field-error" id="email-error">{fieldErrors.email}</p>}
             </div>
 
             <div className="field">
@@ -1005,13 +1006,18 @@ function App() {
               <input id="password" name="password" type="password" value={form.password}
                 onChange={(event) => updateForm(setForm, event)}
                 autoComplete={isRegistering ? 'new-password' : 'current-password'}
-                aria-invalid={Boolean(fieldErrors.password)} />
-              {isRegistering && <p className="field-help">Use at least 8 characters.</p>}
-              {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={[
+                  isRegistering ? 'password-help' : null,
+                  fieldErrors.password ? 'password-error' : null,
+                ].filter(Boolean).join(' ') || undefined} />
+              {isRegistering && <p className="field-help" id="password-help">Use at least 8 characters.</p>}
+              {fieldErrors.password && <p className="field-error" id="password-error">{fieldErrors.password}</p>}
             </div>
 
             {isRegistering && (
-              <fieldset className="role-field">
+              <fieldset className="role-field"
+                aria-describedby={fieldErrors.role ? 'role-error' : undefined}>
                 <legend>Role</legend>
                 <div className="role-options">
                   {['student', 'instructor'].map((role) => (
@@ -1022,7 +1028,7 @@ function App() {
                     </label>
                   ))}
                 </div>
-                {fieldErrors.role && <p className="field-error">{fieldErrors.role}</p>}
+                {fieldErrors.role && <p className="field-error" id="role-error">{fieldErrors.role}</p>}
               </fieldset>
             )}
 

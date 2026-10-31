@@ -5,6 +5,7 @@ import './quiz/quiz.css'
 import QuestionBank from './quiz/QuestionBank'
 import CreateQuiz from './quiz/CreateQuiz'
 import MyQuizzes from './quiz/MyQuizzes'
+import StudentQuizzes from './quiz/StudentQuizzes'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -475,6 +476,7 @@ function DashboardHome({ user, role, onNavigate }) {
   const features = isStudent
     ? [
       { title: 'Study Materials', description: 'Browse and search shared course resources.', icon: 'materials', page: 'browse' },
+      { title: 'Quizzes', description: 'Take timed quizzes and review your results.', icon: 'quiz', page: 'take-quizzes' },
       { title: 'Saved Materials', description: 'Keep useful study resources together.', icon: 'saved', comingSoon: true },
       { title: 'View / Download Materials', description: 'Open or save documents for offline study.', icon: 'download', comingSoon: true },
       { title: 'Learning Analytics', description: 'Review your learning activity and progress.', icon: 'analytics', comingSoon: true },
@@ -720,6 +722,7 @@ function App() {
       questions: 'Question bank',
       'create-quiz': 'Create quiz',
       quizzes: 'My quizzes',
+      'take-quizzes': 'Quizzes',
     }
     const pageLabel = pageLabels[activePage] || 'Dashboard'
     const initials = (session.user.name || session.user.email || 'U')
@@ -759,6 +762,13 @@ function App() {
                 aria-current={activePage === 'upload' ? 'page' : undefined}
                 onClick={() => navigateTo('upload')} title="Upload study material">
                 <span className="nav-icon" aria-hidden="true">↑</span><span className="nav-label">Upload study material</span>
+              </button>
+            )}
+            {isStudent && (
+              <button type="button" className={activePage === 'take-quizzes' ? 'active' : ''}
+                aria-current={activePage === 'take-quizzes' ? 'page' : undefined}
+                onClick={() => navigateTo('take-quizzes')} title="Quizzes">
+                <span className="nav-icon" aria-hidden="true">✎</span><span className="nav-label">Quizzes</span>
               </button>
             )}
             {canManageQuizzes && [
@@ -819,6 +829,7 @@ function App() {
                   }}
                 />
               )}
+              {activePage === 'take-quizzes' && isStudent && <StudentQuizzes token={session.token} />}
               {activePage === 'quizzes' && canManageQuizzes && (
                 <MyQuizzes token={session.token} onCreateQuiz={() => navigateTo('create-quiz')} />
               )}

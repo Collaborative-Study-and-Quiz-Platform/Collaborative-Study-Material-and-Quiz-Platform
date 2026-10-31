@@ -442,5 +442,6 @@ module.exports = {
   submitAttempt,
   getResult,
   finalizeAttempt,
+  finalizeIfTimedOut,
   GRACE_PERIOD_MS
 };

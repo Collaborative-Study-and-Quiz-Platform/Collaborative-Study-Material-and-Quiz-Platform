@@ -1,6 +1,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
+import './quiz/quiz.css'
+import QuestionBank from './quiz/QuestionBank'
+import CreateQuiz from './quiz/CreateQuiz'
+import MyQuizzes from './quiz/MyQuizzes'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -454,6 +458,8 @@ function FeatureIcon({ name }) {
     analytics: <><path d="M4 19V9h4v10zM10 19V4h4v15zM16 19v-7h4v7z" /></>,
     upload: <><path d="M12 16V4" /><path d="m7.5 8.5 4.5-4.5 4.5 4.5" /><path d="M5 15v5h14v-5" /></>,
     manage: <><path d="M3.5 6.5h7l2 2h8v10a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" /><path d="M3.5 9h17" /></>,
+    questions: <><circle cx="12" cy="12" r="8.5" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.5" /><path d="M12 16.8v.2" /></>,
+    quiz: <><rect x="5" y="3.5" width="14" height="17" rx="2" /><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4" /></>,
   }
 
   return (
@@ -476,6 +482,8 @@ function DashboardHome({ user, role, onNavigate }) {
     : [
       { title: 'Upload Study Material', description: 'Share resources organized by course, subject, and topic.', icon: 'upload', page: 'upload' },
       { title: 'Browse Materials', description: 'Explore shared study resources by course, subject, and topic.', icon: 'materials', page: 'browse' },
+      { title: 'Question Bank', description: 'Add, edit, and reuse questions by subject, topic, and difficulty.', icon: 'questions', page: 'questions' },
+      { title: 'Create Quiz', description: 'Build a timed quiz from bank questions or new ones.', icon: 'quiz', page: 'create-quiz' },
       { title: 'Manage My Materials', description: 'Review and organize materials you have uploaded.', icon: 'manage', comingSoon: true },
       { title: 'Material Analytics', description: 'Explore engagement with your shared resources.', icon: 'analytics', comingSoon: true },
     ]
@@ -704,10 +712,14 @@ function App() {
     const role = session.user.role
     const isStudent = role === 'student'
     const isInstructor = role === 'instructor'
+    const canManageQuizzes = isInstructor || role === 'admin'
     const pageLabels = {
       dashboard: 'Dashboard',
       browse: 'Browse materials',
       upload: 'Upload study material',
+      questions: 'Question bank',
+      'create-quiz': 'Create quiz',
+      quizzes: 'My quizzes',
     }
     const pageLabel = pageLabels[activePage] || 'Dashboard'
     const initials = (session.user.name || session.user.email || 'U')
@@ -749,6 +761,17 @@ function App() {
                 <span className="nav-icon" aria-hidden="true">↑</span><span className="nav-label">Upload study material</span>
               </button>
             )}
+            {canManageQuizzes && [
+              ['questions', '?', 'Question bank'],
+              ['create-quiz', '+', 'Create quiz'],
+              ['quizzes', '☰', 'My quizzes'],
+            ].map(([page, icon, label]) => (
+              <button type="button" key={page} className={activePage === page ? 'active' : ''}
+                aria-current={activePage === page ? 'page' : undefined}
+                onClick={() => navigateTo(page)} title={label}>
+                <span className="nav-icon" aria-hidden="true">{icon}</span><span className="nav-label">{label}</span>
+              </button>
+            ))}
           </nav>
 
           <div className="sidebar-profile">
@@ -783,6 +806,22 @@ function App() {
                 <DashboardHome user={session.user} role={role} onNavigate={navigateTo} />
               )}
               {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} />}
+              {activePage === 'questions' && canManageQuizzes && (
+                <QuestionBank token={session.token} user={session.user} />
+              )}
+              {activePage === 'create-quiz' && canManageQuizzes && (
+                <CreateQuiz
+                  token={session.token}
+                  onCreated={(quiz) => {
+                    setActivePage('quizzes')
+                    setFeedback({ type: 'success', text: `Quiz "${quiz.title}" created.` })
+                    window.scrollTo({ top: 0 })
+                  }}
+                />
+              )}
+              {activePage === 'quizzes' && canManageQuizzes && (
+                <MyQuizzes token={session.token} onCreateQuiz={() => navigateTo('create-quiz')} />
+              )}
               {activePage === 'upload' && isInstructor && (
                 <section className="upload-page" aria-labelledby="upload-title">
                   <div className="page-heading">

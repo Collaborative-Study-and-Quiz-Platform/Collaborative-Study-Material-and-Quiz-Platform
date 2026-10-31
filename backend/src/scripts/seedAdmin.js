@@ -1,4 +1,3 @@
-const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const User = require("../models/User");
 
@@ -26,11 +25,10 @@ async function createAdminAccount({ name, email, password }) {
     return existingUser;
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
   return User.create({
     name: name.trim(),
     email: normalizedEmail,
-    password: passwordHash,
+    password,
     role: "admin"
   });
 }

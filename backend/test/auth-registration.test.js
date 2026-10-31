@@ -139,6 +139,19 @@ test("stores a bcrypt password hash instead of plaintext", async () => {
   assert.equal(await bcrypt.compare("secure-password", user.password), true);
 });
 
+test("hashes passwords written directly through the user model", async () => {
+  const user = await User.create({
+    name: "Model User",
+    email: "model@example.com",
+    password: "model-password",
+    role: "student"
+  });
+  const storedUser = await User.findById(user._id).select("+password");
+
+  assert.notEqual(storedUser.password, "model-password");
+  assert.equal(await bcrypt.compare("model-password", storedUser.password), true);
+});
+
 test("rejects admin self-registration", async () => {
   const response = await register({ role: "admin" });
 

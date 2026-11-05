@@ -16,7 +16,7 @@ const protectedRoutes = [
   { method: "put", path: "/api/questions/64b000000000000000000001", deniedRole: "student" },
   { method: "delete", path: "/api/questions/64b000000000000000000001", deniedRole: "student" },
   { method: "post", path: "/api/materials", deniedRole: "student" },
-  { method: "get", path: "/api/materials", deniedRole: "instructor" },
+ { method: "get", path: "/api/materials", deniedRole: "admin" },
   { method: "post", path: "/api/quizzes", deniedRole: "student" },
   { method: "get", path: "/api/quizzes", deniedRole: "student" },
   { method: "get", path: `/api/quizzes/${quizId}`, deniedRole: "student" },

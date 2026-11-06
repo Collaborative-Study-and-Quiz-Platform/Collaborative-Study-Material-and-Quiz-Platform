@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Attempt = require("../../models/Attempt");
 const Quiz = require("../../models/Quiz");
 const { gradeAttempt } = require("../grading/grading.service");
+const { createNotification } = require("../notification/notification.service");
 
 // Extra time allowed after the timer ends, so a submit sent just before
 // time-out is not rejected because of network delay
@@ -82,6 +83,13 @@ async function finalizeAttempt(attempt, quiz, status) {
 async function finalizeIfTimedOut(attempt, quiz) {
   if (attempt.status === "in_progress" && hasTimedOut(attempt)) {
     await finalizeAttempt(attempt, quiz, "auto_submitted");
+    await createNotification({
+      userId: attempt.student,
+      type: "quiz_result",
+      title: `Quiz submitted: ${quiz.title}`,
+      message: `Your time expired and your quiz was submitted. Score: ${attempt.grading.score}/${attempt.grading.maxScore}.`,
+      metadata: { quizId: quiz._id, attemptId: attempt._id }
+    });
   }
   return attempt;
 }
@@ -413,6 +421,13 @@ async function updateAttempt(req, res, next, submit) {
 
     if (submit) {
       await finalizeAttempt(attempt, quiz, "submitted");
+      await createNotification({
+        userId: attempt.student,
+        type: "quiz_result",
+        title: `Quiz submitted: ${quiz.title}`,
+        message: `Your quiz has been submitted. Score: ${attempt.grading.score}/${attempt.grading.maxScore}.`,
+        metadata: { quizId: quiz._id, attemptId: attempt._id }
+      });
     } else {
       await attempt.save();
     }

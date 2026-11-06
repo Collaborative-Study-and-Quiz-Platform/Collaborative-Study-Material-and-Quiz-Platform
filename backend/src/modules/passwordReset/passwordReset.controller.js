@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 
 const User = require("../../models/User");
 const PasswordResetToken = require("../../models/PasswordResetToken");
+const RefreshToken = require("../../models/RefreshToken");
+const { createNotification } = require("../notification/notification.service");
 
 const TOKEN_EXPIRY_MINUTES = 30;
 
@@ -26,6 +28,8 @@ async function sendResetEmail(email, resetUrl) {
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: SMTP_SECURE === "true",
+    requireTLS: SMTP_SECURE !== "true",
+    tls: { minVersion: "TLSv1.2" },
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS
@@ -42,13 +46,14 @@ async function sendResetEmail(email, resetUrl) {
 
 async function forgotPassword(req, res) {
   try {
+    const body = req.body || {};
     const email =
-      typeof req.body.email === "string"
-        ? req.body.email.trim().toLowerCase()
+      typeof body.email === "string"
+        ? body.email.trim().toLowerCase()
         : "";
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "A valid email is required." });
     }
 
     // Use the same response whether the account exists or not.
@@ -160,6 +165,16 @@ async function resetPassword(req, res) {
     }
 
     await PasswordResetToken.deleteMany({ userId: claimedToken.userId });
+    await RefreshToken.updateMany(
+      { userId: claimedToken.userId, revokedAt: null },
+      { $set: { revokedAt: new Date() } }
+    );
+    await createNotification({
+      userId: claimedToken.userId,
+      type: "password_changed",
+      title: "Password changed",
+      message: "Your account password was changed. If you did not make this change, contact support."
+    });
 
     return res.status(200).json({
       message: "Password reset successfully. You can now log in."

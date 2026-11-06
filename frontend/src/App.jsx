@@ -5,6 +5,8 @@ import QuestionBank from './quiz/QuestionBank'
 import CreateQuiz from './quiz/CreateQuiz'
 import MyQuizzes from './quiz/MyQuizzes'
 import StudentQuizzes from './quiz/StudentQuizzes'
+import NotificationCenter from './notifications/NotificationCenter'
+import { apiRequest, configureSessionRefresh } from './quiz/quizApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -615,7 +617,22 @@ function App() {
         }),
       }))
       setLoginForm({ email: '', password: '' })
-      setSession({ token: data.token, user: data.user })
+      configureSessionRefresh(data.refreshToken, (token, refreshToken) => {
+        if (!token) {
+          setSession(null)
+          return
+        }
+        setSession((current) => current && ({
+          ...current,
+          token,
+          refreshToken,
+        }))
+      })
+      setSession({
+        token: data.accessToken || data.token,
+        refreshToken: data.refreshToken,
+        user: data.user,
+      })
       setActivePage('dashboard')
       setFeedback({ type: 'success', text: 'Login successful.' })
     } catch (error) {
@@ -631,7 +648,19 @@ function App() {
     }
   }
 
-  function logout() {
+  async function logout() {
+    if (session?.refreshToken) {
+      try {
+        await apiRequest('/api/auth/logout', {
+          token: session.token,
+          method: 'POST',
+          body: { refreshToken: session.refreshToken },
+        })
+      } catch (error) {
+        console.error('Logout request failed:', error.message)
+      }
+    }
+    configureSessionRefresh(null)
     setSession(null)
     setActivePage('dashboard')
     setFeedback({ type: 'success', text: 'You have been logged out.' })
@@ -663,11 +692,11 @@ function App() {
     setIsSubmitting(true)
     setFeedback(null)
     try {
-      await parseResponse(await fetch(`${API_BASE_URL}/api/materials`, {
+      await apiRequest('/api/materials', {
+        token: session.token,
         method: 'POST',
-        headers: { Authorization: `Bearer ${session.token}` },
         body: formData,
-      }))
+      })
       setMaterialForm({ file: null, course: '', subject: '', topic: '' })
       event.target.reset()
       setFeedback({ type: 'success', text: 'Study material uploaded successfully.' })
@@ -722,6 +751,7 @@ function App() {
       'create-quiz': 'Create quiz',
       quizzes: 'My quizzes',
       'take-quizzes': 'Quizzes',
+      notifications: 'Notifications',
     }
     const pageLabel = pageLabels[activePage] || 'Dashboard'
     const initials = (session.user.name || session.user.email || 'U')
@@ -748,6 +778,11 @@ function App() {
               aria-current={activePage === 'dashboard' ? 'page' : undefined}
               onClick={() => navigateTo('dashboard')} title="Dashboard">
               <span className="nav-icon" aria-hidden="true">⌂</span><span className="nav-label">Dashboard</span>
+            </button>
+            <button type="button" className={activePage === 'notifications' ? 'active' : ''}
+              aria-current={activePage === 'notifications' ? 'page' : undefined}
+              onClick={() => navigateTo('notifications')} title="Notifications">
+              <span className="nav-icon" aria-hidden="true">♢</span><span className="nav-label">Notifications</span>
             </button>
             {(isStudent || isInstructor) && (
               <button type="button" className={activePage === 'browse' ? 'active' : ''}
@@ -814,6 +849,7 @@ function App() {
               {activePage === 'dashboard' && (
                 <DashboardHome user={session.user} role={role} onNavigate={navigateTo} />
               )}
+              {activePage === 'notifications' && <NotificationCenter token={session.token} />}
               {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} />}
               {activePage === 'questions' && canManageQuizzes && (
                 <QuestionBank token={session.token} user={session.user} />

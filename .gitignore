@@ -14,3 +14,4 @@ venv/
 
 # Uploaded study materials (local storage)
 backend/uploads/
+backend/logs/

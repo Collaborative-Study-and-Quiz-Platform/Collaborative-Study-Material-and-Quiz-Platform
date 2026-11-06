@@ -25,10 +25,11 @@ function NotificationCenter({ token }) {
 
   useEffect(() => {
     let active = true
-    loadNotifications(active)
+    const initialLoad = window.setTimeout(() => loadNotifications(active), 0)
     const timer = window.setInterval(() => loadNotifications(active), 60000)
     return () => {
       active = false
+      window.clearTimeout(initialLoad)
       window.clearInterval(timer)
     }
   }, [loadNotifications])

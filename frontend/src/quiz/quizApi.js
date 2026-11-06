@@ -67,7 +67,7 @@ export async function apiRequest(path, { token, method = 'GET', body } = {}, can
       }
     } catch (error) {
       if (error.status) throw error
-      throw new Error('Unable to renew your session.')
+      throw new Error('Unable to renew your session.', { cause: error })
     }
 
     sessionRefreshToken = refreshed.refreshToken

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Question = require("../../models/Question");
+const { findDuplicates } = require("./duplicateDetection");
 
 const QUESTION_TYPES = new Set(Question.QUESTION_TYPES);
 const DIFFICULTY_LEVELS = new Set(Question.DIFFICULTY_LEVELS);
@@ -159,6 +160,43 @@ function toSavedFields(question) {
   };
 }
 
+function duplicateResponse(res, duplicates) {
+  return res.status(409).json({
+    status: "error",
+    code: "DUPLICATE_QUESTION",
+    message: "This question looks like a duplicate of one already in the bank",
+    duplicates
+  });
+}
+
+// POST /api/questions/check-duplicates { text, excludeId? }
+// Checks for near-identical questions without saving anything
+async function checkDuplicates(req, res, next) {
+  const body = req.body || {};
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+
+  if (!text) {
+    return invalidQuestionResponse(res, { text: "Question text is required" });
+  }
+  if (text.length > 2000) {
+    return invalidQuestionResponse(res, { text: "Question text must be 2000 characters or fewer" });
+  }
+  if (body.excludeId !== undefined && !mongoose.isValidObjectId(body.excludeId)) {
+    return invalidQuestionResponse(res, { excludeId: "excludeId must be a question ID" });
+  }
+
+  try {
+    const duplicates = await findDuplicates(text, { excludeId: body.excludeId });
+    return res.status(200).json({
+      status: "success",
+      hasDuplicates: duplicates.length > 0,
+      duplicates
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 function invalidQuestionResponse(res, errors) {
   return res.status(400).json({
     status: "error",
@@ -204,6 +242,14 @@ async function createQuestion(req, res, next) {
   }
 
   try {
+    // CSQP-F-033: warn before saving a near-identical question
+    if (req.body.allowDuplicate !== true) {
+      const duplicates = await findDuplicates(question.text);
+      if (duplicates.length > 0) {
+        return duplicateResponse(res, duplicates);
+      }
+    }
+
     const savedQuestion = await Question.create({
       ...toSavedFields(question),
       createdBy: req.user.id
@@ -339,6 +385,15 @@ async function updateQuestion(req, res, next) {
       return invalidQuestionResponse(res, errors);
     }
 
+    // Only a changed question text is checked again
+    const textChanged = changes.text !== question.text;
+    if (textChanged && body.allowDuplicate !== true) {
+      const duplicates = await findDuplicates(changes.text, { excludeId: question._id });
+      if (duplicates.length > 0) {
+        return duplicateResponse(res, duplicates);
+      }
+    }
+
     question.set(toSavedFields(changes));
     if (!changes.correctAnswer) {
       question.correctAnswer = undefined;
@@ -404,6 +459,7 @@ async function listTags(req, res, next) {
 }
 
 module.exports = {
+  checkDuplicates,
   createQuestion,
   listQuestions,
   listTags,

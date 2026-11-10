@@ -6,6 +6,7 @@ import {
 } from './quizApi'
 import { QuestionFields } from './QuestionForm'
 import QuestionFilters from './QuestionFilters'
+import DuplicateWarning from './DuplicateWarning'
 import {
   emptyQuestion,
   formToQuestion,
@@ -56,6 +57,7 @@ export default function QuestionBank({ token, user }) {
   const [editor, setEditor] = useState(null)
   const [formErrors, setFormErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
+  const [duplicates, setDuplicates] = useState(null)
   const [message, setMessage] = useState(null)
 
   const loadQuestions = useCallback(async (nextFilters) => {
@@ -87,11 +89,12 @@ export default function QuestionBank({ token, user }) {
       : { id: null, form: { ...emptyQuestion, options: ['', '', '', ''] } })
     setFormErrors({})
     setMessage(null)
+    setDuplicates(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  async function saveQuestion(event) {
-    event.preventDefault()
+  async function saveQuestion(event, allowDuplicate = false) {
+    event?.preventDefault()
     const errors = validateQuestionForm(editor.form)
     if (Object.keys(errors).length) {
       setFormErrors(errors)
@@ -103,12 +106,18 @@ export default function QuestionBank({ token, user }) {
       await apiRequest(editor.id ? `/api/questions/${editor.id}` : '/api/questions', {
         token,
         method: editor.id ? 'PUT' : 'POST',
-        body: formToQuestion(editor.form),
+        body: { ...formToQuestion(editor.form), ...(allowDuplicate ? { allowDuplicate: true } : {}) },
       })
       setMessage({ type: 'success', text: editor.id ? 'Question updated.' : 'Question added to the bank.' })
       setEditor(null)
+      setDuplicates(null)
       loadQuestions(filters)
     } catch (error) {
+      // CSQP-F-033: near-identical question, so warn before saving
+      if (error.status === 409 && error.data?.code === 'DUPLICATE_QUESTION') {
+        setDuplicates(error.data.duplicates || [])
+        return
+      }
       setFormErrors(error.fieldErrors || {})
       setMessage({ type: 'error', text: error.message })
     } finally {
@@ -164,8 +173,17 @@ export default function QuestionBank({ token, user }) {
             onChange={(form) => {
               setEditor((current) => ({ ...current, form }))
               setFormErrors({})
+              setDuplicates(null)
             }}
           />
+          {duplicates && (
+            <DuplicateWarning
+              duplicates={duplicates}
+              isSaving={isSaving}
+              onSaveAnyway={() => saveQuestion(null, true)}
+              onKeepEditing={() => setDuplicates(null)}
+            />
+          )}
           <div className="quiz-actions">
             <button type="submit" className="quiz-primary-button" disabled={isSaving}>
               {isSaving ? 'Saving...' : editor.id ? 'Save changes' : 'Add question'}

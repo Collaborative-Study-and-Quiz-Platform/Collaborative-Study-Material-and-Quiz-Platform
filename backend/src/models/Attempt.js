@@ -38,6 +38,16 @@ const resultSchema = new mongoose.Schema(
     maxMarks: {
       type: Number,
       required: true
+    },
+    // Set when an Instructor marks a short answer by hand (CSQP-F-024)
+    manuallyGraded: {
+      type: Boolean,
+      default: false
+    },
+    feedback: {
+      type: String,
+      trim: true,
+      maxlength: 1000
     }
   },
   { _id: false }
@@ -77,6 +87,13 @@ const gradingSchema = new mongoose.Schema(
     gradedAt: {
       type: Date,
       required: true
+    },
+    manuallyGradedAt: {
+      type: Date
+    },
+    manuallyGradedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     }
   },
   { _id: false }

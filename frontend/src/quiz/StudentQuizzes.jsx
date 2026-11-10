@@ -445,8 +445,11 @@ function QuizResult({ token, quiz, onBack }) {
           <h2 className="quiz-section-title quiz-review-title">Answer review</h2>
           <ol className="quiz-item-list">
             {result.review.map((item, index) => {
-              const tone = item.isCorrect === true ? 'success' : item.isCorrect === false ? 'error' : 'warning'
-              const label = item.isCorrect === true ? 'Correct' : item.isCorrect === false ? 'Incorrect' : 'Awaiting grading'
+              const tone = item.isCorrect === true ? 'success' : item.manuallyGraded && item.marksAwarded > 0 ? 'warning' : item.isCorrect === false ? 'error' : 'warning'
+              const partial = item.manuallyGraded && item.isCorrect === false && item.marksAwarded > 0
+              const label = item.manuallyGraded
+                ? (item.isCorrect ? 'Full marks' : partial ? 'Partly correct' : 'No marks')
+                : item.isCorrect === true ? 'Correct' : item.isCorrect === false ? 'Incorrect' : 'Awaiting grading'
               const show = (value) => (value === 'true' ? 'True' : value === 'false' ? 'False' : value)
               return (
                 <li className={`quiz-card quiz-review-${tone}`} key={String(item.questionId)}>
@@ -463,6 +466,7 @@ function QuizResult({ token, quiz, onBack }) {
                       {item.type === 'short_answer' ? 'Model answer' : 'Correct answer'}: <strong>{show(item.correctAnswer)}</strong>
                     </p>
                   )}
+                  {item.feedback && <p className="quiz-review-line quiz-feedback">Instructor feedback: {item.feedback}</p>}
                 </li>
               )
             })}

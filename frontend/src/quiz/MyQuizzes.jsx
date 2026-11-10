@@ -6,6 +6,7 @@ import {
   toDateTimeInput,
 } from './quizApi'
 import ScheduleFields from './ScheduleFields'
+import QuizSubmissions from './QuizSubmissions'
 import { QuestionSummary } from './QuestionBank'
 
 // Set, change, or remove a quiz window (CSQP-F-021)
@@ -72,6 +73,7 @@ function ScheduleEditor({ token, quiz, onSaved }) {
 // Instructor's own quizzes (Admins see all), newest first
 export default function MyQuizzes({ token, onCreateQuiz }) {
   const [quizzes, setQuizzes] = useState([])
+  const [submissionsFor, setSubmissionsFor] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -92,6 +94,10 @@ export default function MyQuizzes({ token, onCreateQuiz }) {
     const timer = window.setTimeout(loadQuizzes, 0)
     return () => window.clearTimeout(timer)
   }, [loadQuizzes])
+
+  if (submissionsFor) {
+    return <QuizSubmissions token={token} quiz={submissionsFor} onBack={() => { setSubmissionsFor(null); loadQuizzes() }} />
+  }
 
   return (
     <section className="library" aria-labelledby="my-quizzes-title">
@@ -140,6 +146,12 @@ export default function MyQuizzes({ token, onCreateQuiz }) {
                   <span className="quiz-tag">Pass at {quiz.passingScore}%</span>
                   <span className="quiz-tag">{quiz.showAnswers ? 'Answers shown after submitting' : 'Answers hidden from students'}</span>
                   {quiz.createdAt && <span className="quiz-tag">Created {new Date(quiz.createdAt).toLocaleDateString()}</span>}
+                </div>
+                <div className="quiz-actions">
+                  <button type="button" className="quiz-primary-button"
+                    onClick={() => { setSubmissionsFor(quiz); window.scrollTo({ top: 0 }) }}>
+                    Submissions and grading
+                  </button>
                 </div>
                 <ScheduleEditor
                   token={token}

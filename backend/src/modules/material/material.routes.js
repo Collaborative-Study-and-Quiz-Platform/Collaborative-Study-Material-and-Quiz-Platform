@@ -6,6 +6,8 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { updateMaterial, deleteMaterial } = require("./materialManagement.controller");
+
 const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -50,6 +52,9 @@ router.get(
   authorizeRoles("student", "instructor"),
   listMaterials
 );
+
+router.patch("/:id", authenticateToken, authorizeRoles("instructor"), updateMaterial);
+router.delete("/:id", authenticateToken, authorizeRoles("instructor"), deleteMaterial);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

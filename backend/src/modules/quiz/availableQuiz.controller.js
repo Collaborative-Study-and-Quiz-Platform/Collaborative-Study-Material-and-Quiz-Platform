@@ -2,6 +2,7 @@ const Attempt = require("../../models/Attempt");
 const Question = require("../../models/Question");
 const Quiz = require("../../models/Quiz");
 const { finalizeIfTimedOut } = require("../attempt/attempt.controller");
+const { scheduleStatus } = require("./quizSchedule");
 
 function distinctSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -31,12 +32,20 @@ function attemptSummary(attempt) {
   return summary;
 }
 
-// Lists quizzes a student can take, newest first, with their own attempt.
-// Every quiz is listed for now; CSQP-F-021 (Schedule Quiz) will limit this
-// to quizzes inside their scheduled window.
+// Lists the quizzes a student can see, newest first, with their own attempt.
+// CSQP-F-021: open and upcoming quizzes are listed, plus any quiz the student
+// has already attempted (so results stay reachable). Unscheduled quizzes and
+// closed quizzes the student never took are hidden.
 async function listAvailableQuizzes(req, res, next) {
   try {
-    const quizzes = await Quiz.find().sort({ createdAt: -1 });
+    const now = new Date();
+    const attempted = await Attempt.find({ student: req.user.id }).distinct("quiz");
+    const quizzes = await Quiz.find({
+      $or: [
+        { availableFrom: { $ne: null }, availableUntil: { $gt: now } },
+        { _id: { $in: attempted } }
+      ]
+    }).sort({ createdAt: -1 });
     const quizIds = quizzes.map((quiz) => quiz._id);
 
     const [attempts, sourceQuestions] = await Promise.all([
@@ -70,6 +79,9 @@ async function listAvailableQuizzes(req, res, next) {
         subjects: distinctSorted(metadata.map((question) => question.subject)),
         topics: distinctSorted(metadata.map((question) => question.topic)),
         createdAt: quiz.createdAt,
+        availableFrom: quiz.availableFrom,
+        availableUntil: quiz.availableUntil,
+        scheduleStatus: scheduleStatus(quiz, now),
         attempt: attemptSummary(attempt)
       };
     }));

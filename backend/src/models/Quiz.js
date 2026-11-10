@@ -79,12 +79,22 @@ const quizSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true
+    },
+    // Quiz window (CSQP-F-021); both null means not scheduled yet
+    availableFrom: {
+      type: Date,
+      default: null
+    },
+    availableUntil: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }
 );
 
 quizSchema.index({ createdBy: 1, createdAt: -1 });
+quizSchema.index({ availableFrom: 1, availableUntil: 1 });
 
 quizSchema.set("toJSON", {
   transform: (document, returnedQuiz) => {

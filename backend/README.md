@@ -294,3 +294,20 @@ The answer review depends on the quiz's `showAnswers` setting, chosen by the Ins
 Each quiz also includes the student's own `attempt`, or `null` if they have not started it. The attempt shows its `status` (`in_progress`, `submitted`, or `auto_submitted`) and timing, plus `score`, `maxScore`, `percentage`, `passed`, and `gradingStatus` once it is graded. An attempt whose time ran out is auto-submitted when the list is loaded.
 
 For now every quiz is listed. CSQP-F-021 (Schedule Quiz) will limit the list to quizzes inside their scheduled window.
+
+## Quiz Scheduling
+
+A quiz can be given a window with `availableFrom` and `availableUntil` (ISO date-times). Students can only start the quiz inside that window (CSQP-F-021). A quiz without a window is a draft and is hidden from students.
+
+Set the window when creating the quiz by adding both fields to `POST /api/quizzes`, or later with `PUT /api/quizzes/:id/schedule`:
+
+```json
+{
+  "availableFrom": "2026-11-12T09:00:00.000Z",
+  "availableUntil": "2026-11-12T11:00:00.000Z"
+}
+```
+
+Send both fields as `null` to remove the schedule. Both times must be given together, the end must be after the start and in the future, and the window must be at least as long as the quiz duration; otherwise the request returns HTTP `400`. Only the Instructor who created the quiz, or an Admin, can schedule it; others get `403`. Instructor quiz responses include `scheduleStatus`: `unscheduled`, `upcoming`, `open`, or `closed`.
+
+For students, `POST /api/quizzes/:quizId/attempt/start` returns HTTP `409` before the start time, after the end time, or when the quiz is not scheduled, with the window in `availableFrom` and `availableUntil`. An attempt's deadline is the earlier of its timer and the window's end, so no attempt runs past closing time. `GET /api/quizzes/available` lists open and upcoming quizzes, each with its window and `scheduleStatus`, plus any quiz the student has already attempted so its result stays reachable.

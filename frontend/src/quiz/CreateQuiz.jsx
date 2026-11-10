@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DIFFICULTIES, QUESTION_TYPES, apiRequest } from './quizApi'
+import { DIFFICULTIES, QUESTION_TYPES, apiRequest, fromDateTimeInput } from './quizApi'
+import ScheduleFields from './ScheduleFields'
 import { QuestionSummary } from './QuestionBank'
 import { QuestionFields } from './QuestionForm'
 import { emptyQuestion, formToQuestion, validateQuestionForm } from './questionFormUtils'
@@ -10,6 +11,8 @@ const emptySettings = {
   durationMinutes: '30',
   passingScore: '50',
   showAnswers: false,
+  availableFrom: '',
+  availableUntil: '',
 }
 
 let nextItemKey = 1
@@ -29,6 +32,11 @@ function validateSettings(settings) {
   }
   if (settings.passingScore === '' || Number.isNaN(passing) || passing < 0 || passing > 100) {
     errors.passingScore = 'Enter a percentage from 0 to 100.'
+  }
+  if (Boolean(settings.availableFrom) !== Boolean(settings.availableUntil)) {
+    errors[settings.availableFrom ? 'availableUntil' : 'availableFrom'] = 'Give both times, or leave both empty.'
+  } else if (settings.availableFrom && new Date(settings.availableUntil) <= new Date(settings.availableFrom)) {
+    errors.availableUntil = 'Closing time must be after the opening time.'
   }
   return errors
 }
@@ -221,6 +229,8 @@ export default function CreateQuiz({ token, onCreated }) {
           durationMinutes: Number(settings.durationMinutes),
           passingScore: Number(settings.passingScore),
           showAnswers: settings.showAnswers,
+          availableFrom: fromDateTimeInput(settings.availableFrom),
+          availableUntil: fromDateTimeInput(settings.availableUntil),
           questions: items.map((item) => (item.bankQuestion
             ? { questionId: item.bankQuestion._id, marks: Number(item.marks) }
             : { question: formToQuestion(item.newQuestion), marks: Number(item.marks) })),
@@ -283,6 +293,20 @@ export default function CreateQuiz({ token, onCreated }) {
             Show correct answers to students after they submit
           </label>
         </div>
+
+        <h2 className="quiz-section-title">Schedule (optional)</h2>
+        <p className="field-help quiz-schedule-help">
+          Students can only start the quiz between these times. Leave both empty to keep it as a draft and schedule it later from My quizzes.
+        </p>
+        <ScheduleFields
+          idPrefix="quiz-schedule"
+          value={{ availableFrom: settings.availableFrom, availableUntil: settings.availableUntil }}
+          errors={errors}
+          onChange={(next) => {
+            updateSetting('availableFrom', next.availableFrom)
+            updateSetting('availableUntil', next.availableUntil)
+          }}
+        />
 
         <div className="quiz-heading-row">
           <h2 className="quiz-section-title">

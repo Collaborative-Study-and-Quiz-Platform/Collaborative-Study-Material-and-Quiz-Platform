@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const {
+  checkDuplicates,
   createQuestion,
   listQuestions,
   listTags,
@@ -51,6 +52,7 @@ router.use(authenticateToken, authorizeRoles("instructor", "admin"));
 
 router.post("/import", receiveImportFile, importQuestions);
 router.post("/", createQuestion);
+router.post("/check-duplicates", checkDuplicates);
 router.get("/", listQuestions);
 router.get("/tags", listTags);
 router.get("/:id", getQuestion);

@@ -4,6 +4,7 @@ import ScheduleFields from './ScheduleFields'
 import { QuestionSummary } from './QuestionBank'
 import { QuestionFields } from './QuestionForm'
 import QuestionFilters from './QuestionFilters'
+import DuplicateWarning from './DuplicateWarning'
 import {
   emptyQuestion,
   emptyQuestionFilters,
@@ -128,6 +129,7 @@ export default function CreateQuiz({ token, onCreated }) {
   const [showPicker, setShowPicker] = useState(false)
   const [draftQuestion, setDraftQuestion] = useState(null)
   const [draftErrors, setDraftErrors] = useState({})
+  const [draftDuplicates, setDraftDuplicates] = useState(null)
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -151,15 +153,30 @@ export default function CreateQuiz({ token, onCreated }) {
     clearErrorMessage()
   }
 
-  function addNewQuestion(event) {
-    event.preventDefault()
+  // New quiz questions are saved to the bank too, so check for duplicates first (CSQP-F-033)
+  async function addNewQuestion(event, allowDuplicate = false) {
+    event?.preventDefault()
     const questionErrors = validateQuestionForm(draftQuestion)
     if (Object.keys(questionErrors).length) {
       setDraftErrors(questionErrors)
       return
     }
+    if (!allowDuplicate) {
+      try {
+        const check = await apiRequest('/api/questions/check-duplicates', {
+          token, method: 'POST', body: { text: formToQuestion(draftQuestion).text },
+        })
+        if (check.hasDuplicates) {
+          setDraftDuplicates(check.duplicates)
+          return
+        }
+      } catch {
+        // If the check fails, still let the instructor add the question
+      }
+    }
     setItems((current) => [...current, { key: nextItemKey++, newQuestion: draftQuestion, marks: '1' }])
     setDraftQuestion(null)
+    setDraftDuplicates(null)
     setDraftErrors({})
     setErrors((current) => ({ ...current, questions: undefined }))
     clearErrorMessage()
@@ -366,8 +383,27 @@ export default function CreateQuiz({ token, onCreated }) {
             onChange={(form) => {
               setDraftQuestion(form)
               setDraftErrors({})
+              setDraftDuplicates(null)
             }}
           />
+          {draftDuplicates && (
+            <DuplicateWarning
+              duplicates={draftDuplicates}
+              saveLabel="Add anyway"
+              onSaveAnyway={() => addNewQuestion(null, true)}
+              onKeepEditing={() => setDraftDuplicates(null)}
+              onUseExisting={async (match) => {
+                try {
+                  const data = await apiRequest(`/api/questions/${match._id}`, { token })
+                  addBankQuestion(data.question)
+                  setDraftQuestion(null)
+                  setDraftDuplicates(null)
+                } catch (error) {
+                  setMessage({ type: 'error', text: error.message })
+                }
+              }}
+            />
+          )}
           <p className="field-help">New questions are also saved to the question bank when the quiz is created.</p>
           <div className="quiz-actions">
             <button type="submit" className="quiz-primary-button">Add to quiz</button>

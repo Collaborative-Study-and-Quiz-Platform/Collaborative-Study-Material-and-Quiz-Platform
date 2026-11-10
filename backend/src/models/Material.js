@@ -26,6 +26,7 @@ const materialSchema = new mongoose.Schema(
       required: true,
       min: 1
     },
+    downloadCount: { type: Number, default: 0, min: 0 },
     tags: {
       course: { type: String, required: true, maxlength: 100, trim: true },
       subject: { type: String, required: true, maxlength: 100, trim: true },

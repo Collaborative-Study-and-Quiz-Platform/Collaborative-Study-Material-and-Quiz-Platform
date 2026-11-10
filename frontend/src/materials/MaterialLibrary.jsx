@@ -1,3 +1,4 @@
+import MaterialActions from './MaterialActions'
 import { useCallback, useEffect, useState } from 'react'
 
 function groupMaterials(materials) {
@@ -39,7 +40,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded }) {
   const fileSize = formatFileSize(material.fileSize)
   const uploadedDate = material.createdAt
     ? new Date(material.createdAt).toLocaleDateString()
@@ -53,16 +54,18 @@ function MaterialRow({ material }) {
         <p>
           {[
             material.mimeType,
+            `${material.downloadCount ?? 0} downloads`,
             fileSize && `Size ${fileSize}`,
             uploadedDate && `Uploaded ${uploadedDate}`,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
+      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} />}
     </article>
   )
 }
 
-export default function MaterialLibrary({ token, apiBaseUrl, parseResponse }) {
+export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role }) {
   const [materials, setMaterials] = useState([])
   const [resultCount, setResultCount] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
@@ -128,6 +131,24 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse }) {
     loadMaterials(emptyFilters)
   }
 
+  async function refreshDownloadCount(id) {
+    // Update only this row; preserve filters and the mounted disclosure tree.
+    setMaterials((current) => current.map((material) => material._id === id
+      ? { ...material, downloadCount: (material.downloadCount ?? 0) + 1 } : material))
+    try {
+      // The server records completion after flushing the file response.
+      await new Promise((resolve) => window.setTimeout(resolve, 150))
+      const data = await parseResponse(await fetch(`${apiBaseUrl}/api/materials`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }))
+      const updated = data.materials?.find((material) => material._id === id)
+      if (updated) setMaterials((current) => current.map((material) => material._id === id
+        ? { ...material, downloadCount: Math.max(material.downloadCount ?? 0, updated.downloadCount ?? 0) } : material))
+    } catch {
+      // Keep the completed download's local count if refreshing is unavailable.
+    }
+  }
+
   const courseGroups = groupMaterials(materials)
 
   return (
@@ -135,8 +156,8 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse }) {
       <div className="library-heading">
         <div>
           <p className="eyebrow">Study resources</p>
-          <h1 id="library-title">Browse materials</h1>
-          <p>Search materials shared by instructors.</p>
+          <h1 id="library-title">{role === 'instructor' ? 'My Uploads' : 'Browse materials'}</h1>
+          <p>{role === 'instructor' ? 'Find and preview your uploaded study materials.' : 'Search materials shared by instructors.'}</p>
         </div>
       </div>
 
@@ -231,7 +252,8 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse }) {
                           </summary>
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
-                              <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material} />
+                              <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} />
                             ))}
                           </div>
                         </details>

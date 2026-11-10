@@ -339,3 +339,11 @@ Short-answer questions are graded by hand (CSQP-F-024). These routes need a JWT 
 ```
 
 `marks` is a number from 0 to the question's marks, in steps of 0.5, and `feedback` is optional text of up to 1000 characters. Only short-answer questions can be graded this way; invalid grades return HTTP `422`, and an attempt still in progress returns `409`. The attempt's `score`, `percentage`, `pendingMarks`, `gradingStatus`, and `passed` are recalculated from all question marks, so manual marks are added to the auto-graded score. Marks can be changed later. When the last short answer is graded the student gets a notification, and their result (`GET /api/quizzes/:quizId/attempt/result`) shows the new score, with each short answer's marks and feedback in the answer review when answers are visible.
+
+## Export Quiz Results
+
+`GET /api/quizzes/:quizId/submissions/export` downloads every attempt at a quiz as a CSV file (CSQP-F-026), for the Instructor who created the quiz or an Admin; others get HTTP `403`. The file is named after the quiz and the date, for example `transport-layer-quiz-results-2026-11-10.csv`.
+
+The first row holds the column names and each further row is one student attempt, oldest first: `Student name`, `Student email`, `Status`, `Started at`, `Submitted at` (ISO timestamps), `Score`, `Max score`, `Percentage`, `Passed` (`Yes`, `No`, or `Pending` while short answers wait for grading), `Grading status`, `Pending marks`, and the marks for each question (`Q1 marks (out of 2)`, and so on). Attempts still in progress have an empty score, and attempts whose time ran out are auto-submitted before export.
+
+Values containing commas, quotes, or line breaks are quoted, and text starting with `=`, `+`, `-`, or `@` is prefixed with `'` so spreadsheet apps do not run it as a formula. The file starts with a UTF-8 byte order mark so Excel shows names correctly.

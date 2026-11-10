@@ -34,7 +34,10 @@ npm start
 
 Set `MONGODB_URI` in the ignored `.env` file before starting the server.
 
-Set `JWT_SECRET` to a long, random value and optionally set `JWT_EXPIRES_IN` (default `1h`) in `.env`. See `.env.example`; never commit the real secret.
+Set `JWT_SECRET` to a random value of at least 32 bytes in production. Access tokens
+expire after 15 minutes by default (`JWT_EXPIRES_IN`, maximum `1h`); refresh tokens
+expire after 7 days by default (`JWT_REFRESH_EXPIRES_IN`, maximum `30d`). See
+`.env.example`; never commit real secrets.
 
 ## User Login
 
@@ -47,7 +50,59 @@ Set `JWT_SECRET` to a long, random value and optionally set `JWT_EXPIRES_IN` (de
 }
 ```
 
-A successful request returns HTTP `200` with a signed JWT and safe user details. Invalid or unknown credentials return HTTP `401` with the same message. Missing or malformed fields return HTTP `400`. The JWT contains the user ID (`sub`) and role.
+A successful request returns HTTP `200` with an `accessToken` (also available in
+the compatibility `token` field), a refresh token, and safe user details. Invalid
+or unknown credentials return HTTP `401` with the same message. Missing or
+malformed fields return HTTP `400`. The JWT contains the user ID (`sub`) and role.
+
+`POST /api/auth/refresh` accepts `{ "refreshToken": "<current refresh token>" }`,
+marks the token as used, and returns a new access and refresh token. Refresh-token
+reuse revokes the token family. `POST /api/auth/logout` accepts the current refresh
+token and revokes its family. The database stores only a SHA-256 hash of each
+refresh token. Keep tokens out of URLs and logs; clients should retain refresh
+tokens only for the active session and send them only to refresh/logout.
+
+Authentication endpoints are rate limited by client IP. Login allows 15 requests
+per 15 minutes, registration 20 requests per hour, password reset 10 requests per
+15 minutes, and refresh/logout 30 requests per 15 minutes. If deploying multiple
+backend replicas, enforce equivalent limits at the shared gateway as well.
+
+## Notifications
+
+Registration and quiz submission create in-app notifications. Users can retrieve
+their own notifications with `GET /api/notifications`, filter unread messages with
+`?unread=true`, and mark messages read with
+`PATCH /api/notifications/:notificationId/read` or `PATCH /api/notifications/read-all`.
+The authenticated user's ID is applied server-side, so notification records cannot
+be read or changed by another user.
+
+Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, and
+`SMTP_FROM` to enable email delivery. SMTP connections require TLS 1.2 or newer.
+In-app notifications remain available when SMTP is not configured; email delivery
+failures are logged without losing the in-app notification.
+
+## TLS and availability
+
+In production the server requires TLS 1.2 or newer. For direct TLS termination,
+configure both `HTTPS_KEY_FILE` and `HTTPS_CERT_FILE`. Behind a reverse proxy,
+configure `TRUST_PROXY_HOPS` to the exact number of trusted proxy hops, and
+configure that proxy to accept TLS 1.2+ only and redirect/reject plain HTTP.
+Production MongoDB connections also require TLS. HTTPS responses include HSTS.
+
+`GET /api/health/live` reports process liveness. `GET /api/health/ready` (also
+`/api/ready`) returns `200` only when MongoDB is connected and `503` otherwise.
+Use readiness for an external uptime monitor and configure the probe to check the
+deployed URL, not localhost. To record a local JSONL observation log every minute,
+run `npm run uptime:monitor` from `backend/`; set `HEALTHCHECK_URL`,
+`UPTIME_INTERVAL_MS`, and `UPTIME_LOG_FILE` for deployment. Generate a report with
+`npm run uptime:report`. The report only passes the 99% target after it contains
+at least 14 days of observations. Store and review the log as part of the operations
+record; this code cannot claim availability before the observation period.
+
+All JSON request bodies are limited to 1 MiB, malformed JSON is rejected, and
+dangerous Mongo-style keys and active HTML/script payloads are rejected before
+route handlers. Route-level validators enforce each endpoint's field and value
+constraints. JSON responses are rendered as text in the frontend.
 
 ## Current User
 

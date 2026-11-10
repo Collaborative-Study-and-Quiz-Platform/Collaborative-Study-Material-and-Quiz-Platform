@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DIFFICULTIES, QUESTION_TYPES, apiRequest, fromDateTimeInput } from './quizApi'
+import { apiRequest, fromDateTimeInput } from './quizApi'
 import ScheduleFields from './ScheduleFields'
 import { QuestionSummary } from './QuestionBank'
 import { QuestionFields } from './QuestionForm'
-import { emptyQuestion, formToQuestion, validateQuestionForm } from './questionFormUtils'
+import QuestionFilters from './QuestionFilters'
+import {
+  emptyQuestion,
+  emptyQuestionFilters,
+  formToQuestion,
+  questionFilterQuery,
+  validateQuestionForm,
+} from './questionFormUtils'
 
 const emptySettings = {
   title: '',
@@ -43,7 +50,7 @@ function validateSettings(settings) {
 
 // Lets the instructor pick questions from the bank
 function BankPicker({ token, selectedIds, onAdd, onClose }) {
-  const [filters, setFilters] = useState({ subject: '', topic: '', difficulty: '', type: '' })
+  const [filters, setFilters] = useState(emptyQuestionFilters)
   const [questions, setQuestions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -51,12 +58,8 @@ function BankPicker({ token, selectedIds, onAdd, onClose }) {
   const load = useCallback(async (nextFilters) => {
     setIsLoading(true)
     setError('')
-    const params = new URLSearchParams()
-    Object.entries(nextFilters).forEach(([key, value]) => {
-      if (value.trim()) params.set(key, value.trim())
-    })
     try {
-      const data = await apiRequest(`/api/questions?${params}`, { token })
+      const data = await apiRequest(`/api/questions?${questionFilterQuery(nextFilters)}`, { token })
       setQuestions(Array.isArray(data.questions) ? data.questions : [])
     } catch (requestError) {
       setError(requestError.message)
@@ -66,14 +69,9 @@ function BankPicker({ token, selectedIds, onAdd, onClose }) {
   }, [token])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => load({ subject: '', topic: '', difficulty: '', type: '' }), 0)
+    const timer = window.setTimeout(() => load(emptyQuestionFilters), 0)
     return () => window.clearTimeout(timer)
   }, [load])
-
-  function updateFilter(event) {
-    const { name, value } = event.target
-    setFilters((current) => ({ ...current, [name]: value }))
-  }
 
   return (
     <div id="quiz-picker" className="upload-panel quiz-picker">
@@ -81,31 +79,16 @@ function BankPicker({ token, selectedIds, onAdd, onClose }) {
         <h2 className="quiz-section-title">Add from the question bank</h2>
         <button type="button" className="secondary-button quiz-auto-button" onClick={onClose}>Done</button>
       </div>
-      <form className="library-filters quiz-filters" onSubmit={(event) => { event.preventDefault(); load(filters) }}>
-        {['subject', 'topic'].map((name) => (
-          <div className="field" key={name}>
-            <label htmlFor={`picker-${name}`}>{name[0].toUpperCase() + name.slice(1)}</label>
-            <input id={`picker-${name}`} name={name} type="search" value={filters[name]} onChange={updateFilter} placeholder={`Any ${name}`} />
-          </div>
-        ))}
-        <div className="field">
-          <label htmlFor="picker-difficulty">Difficulty</label>
-          <select id="picker-difficulty" name="difficulty" value={filters.difficulty} onChange={updateFilter}>
-            <option value="">Any difficulty</option>
-            {DIFFICULTIES.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="picker-type">Type</label>
-          <select id="picker-type" name="type" value={filters.type} onChange={updateFilter}>
-            <option value="">Any type</option>
-            {QUESTION_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
-        </div>
-        <div className="library-actions">
-          <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
-        </div>
-      </form>
+      <QuestionFilters
+        token={token}
+        idPrefix="picker"
+        filters={filters}
+        onChange={setFilters}
+        onSubmit={load}
+        onClear={() => { setFilters(emptyQuestionFilters); load(emptyQuestionFilters) }}
+        isLoading={isLoading}
+        framed={false}
+      />
 
       {error && <p className="feedback error" role="alert">{error}</p>}
       {!isLoading && !error && questions.length === 0 && (

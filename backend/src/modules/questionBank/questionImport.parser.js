@@ -14,7 +14,8 @@ const COLUMN_ALIASES = {
   topic: ["topic"],
   difficulty: ["difficulty", "level"],
   options: ["options", "choices"],
-  correctAnswer: ["correctanswer", "answer", "correct"]
+  correctAnswer: ["correctanswer", "answer", "correct"],
+  tags: ["tags", "tag", "keywords"]
 };
 const OPTION_COLUMN = /^option([a-f1-6])$/;
 

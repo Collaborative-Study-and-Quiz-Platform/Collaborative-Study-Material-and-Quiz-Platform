@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  DIFFICULTIES,
-  QUESTION_TYPES,
   apiRequest,
   difficultyLabel,
   typeLabel,
 } from './quizApi'
 import { QuestionFields } from './QuestionForm'
+import QuestionFilters from './QuestionFilters'
 import {
   emptyQuestion,
   formToQuestion,
   questionToForm,
   validateQuestionForm,
+  emptyQuestionFilters,
+  questionFilterQuery,
 } from './questionFormUtils'
 
-const emptyFilters = { subject: '', topic: '', difficulty: '', type: '' }
 
 export function QuestionSummary({ question, showAnswer = true }) {
   return (
@@ -24,6 +24,7 @@ export function QuestionSummary({ question, showAnswer = true }) {
         {question.difficulty && <span className="quiz-tag">{difficultyLabel(question.difficulty)}</span>}
         {question.subject && <span className="quiz-tag">{question.subject}</span>}
         {question.topic && <span className="quiz-tag">{question.topic}</span>}
+        {question.tags?.map((tag) => <span className="quiz-tag question-tag" key={`tag-${tag}`}>#{tag}</span>)}
       </div>
       <p className="question-text">{question.text}</p>
       {question.type === 'mcq' && (
@@ -49,7 +50,7 @@ export function QuestionSummary({ question, showAnswer = true }) {
 // Instructor question bank: filter, add, edit, and delete questions (CSQP-F-030)
 export default function QuestionBank({ token, user }) {
   const [questions, setQuestions] = useState([])
-  const [filters, setFilters] = useState(emptyFilters)
+  const [filters, setFilters] = useState(emptyQuestionFilters)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [editor, setEditor] = useState(null)
@@ -60,13 +61,8 @@ export default function QuestionBank({ token, user }) {
   const loadQuestions = useCallback(async (nextFilters) => {
     setIsLoading(true)
     setLoadError('')
-    const params = new URLSearchParams()
-    Object.entries(nextFilters).forEach(([key, value]) => {
-      if (value.trim()) params.set(key, value.trim())
-    })
-
     try {
-      const data = await apiRequest(`/api/questions?${params}`, { token })
+      const data = await apiRequest(`/api/questions?${questionFilterQuery(nextFilters)}`, { token })
       setQuestions(Array.isArray(data.questions) ? data.questions : [])
     } catch (error) {
       setLoadError(error.message || 'Unable to load questions.')
@@ -76,23 +72,13 @@ export default function QuestionBank({ token, user }) {
   }, [token])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => loadQuestions(emptyFilters), 0)
+    const timer = window.setTimeout(() => loadQuestions(emptyQuestionFilters), 0)
     return () => window.clearTimeout(timer)
   }, [loadQuestions])
 
-  function updateFilter(event) {
-    const { name, value } = event.target
-    setFilters((current) => ({ ...current, [name]: value }))
-  }
-
-  function submitFilters(event) {
-    event.preventDefault()
-    loadQuestions(filters)
-  }
-
   function clearFilters() {
-    setFilters(emptyFilters)
-    loadQuestions(emptyFilters)
+    setFilters(emptyQuestionFilters)
+    loadQuestions(emptyQuestionFilters)
   }
 
   function openEditor(question) {
@@ -191,39 +177,15 @@ export default function QuestionBank({ token, user }) {
         </form>
       )}
 
-      <form className="library-filters filter-panel quiz-filters" onSubmit={submitFilters}>
-        {['subject', 'topic'].map((name) => (
-          <div className="field" key={name}>
-            <label htmlFor={`question-filter-${name}`}>{name[0].toUpperCase() + name.slice(1)}</label>
-            <input
-              id={`question-filter-${name}`}
-              name={name}
-              type="search"
-              value={filters[name]}
-              onChange={updateFilter}
-              placeholder={`Any ${name}`}
-            />
-          </div>
-        ))}
-        <div className="field">
-          <label htmlFor="question-filter-difficulty">Difficulty</label>
-          <select id="question-filter-difficulty" name="difficulty" value={filters.difficulty} onChange={updateFilter}>
-            <option value="">Any difficulty</option>
-            {DIFFICULTIES.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="question-filter-type">Type</label>
-          <select id="question-filter-type" name="type" value={filters.type} onChange={updateFilter}>
-            <option value="">Any type</option>
-            {QUESTION_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
-        </div>
-        <div className="library-actions">
-          <button type="submit" disabled={isLoading}>{isLoading ? 'Searching...' : 'Search'}</button>
-          <button type="button" className="secondary-button" onClick={clearFilters} disabled={isLoading}>Clear</button>
-        </div>
-      </form>
+      <QuestionFilters
+        token={token}
+        idPrefix="question-filter"
+        filters={filters}
+        onChange={setFilters}
+        onSubmit={loadQuestions}
+        onClear={clearFilters}
+        isLoading={isLoading}
+      />
 
       {loadError && <p className="feedback error" role="alert">{loadError}</p>}
       <p className="results-count" role="status" aria-live="polite">

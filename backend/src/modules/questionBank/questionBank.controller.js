@@ -7,6 +7,29 @@ const METADATA_FIELDS = ["subject", "topic"];
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
 const CASE_INSENSITIVE = { locale: "en", strength: 2 };
+const MAX_TAGS = 10;
+const MAX_TAG_LENGTH = 30;
+const MAX_KEYWORD_LENGTH = 100;
+
+// Accepts tags as a list or as text separated by commas or semicolons,
+// and returns them trimmed, lower case, and without repeats
+function normalizeTags(value) {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  const parts = Array.isArray(value) ? value : typeof value === "string" ? value.split(/[,;]/) : null;
+  if (!parts) {
+    return value;
+  }
+  const tags = parts
+    .map((tag) => (typeof tag === "string" ? tag.trim().toLowerCase().replace(/\s+/g, " ") : tag))
+    .filter((tag) => tag !== "");
+  return [...new Set(tags)];
+}
+
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : value;
@@ -24,6 +47,7 @@ function normalizeQuestionInput(body) {
     subject: normalizeText(body.subject),
     topic: normalizeText(body.topic),
     difficulty: normalizeChoice(body.difficulty),
+    tags: normalizeTags(body.tags),
     options: Array.isArray(body.options)
       ? body.options.map(normalizeText)
       : body.options,
@@ -106,6 +130,14 @@ function validateQuestionInput(question) {
     errors.difficulty = "Difficulty must be easy, medium, or hard";
   }
 
+  if (!Array.isArray(question.tags) || question.tags.some((tag) => typeof tag !== "string")) {
+    errors.tags = "Tags must be a list of words";
+  } else if (question.tags.length > MAX_TAGS) {
+    errors.tags = `A question can have at most ${MAX_TAGS} tags`;
+  } else if (question.tags.some((tag) => tag.length > MAX_TAG_LENGTH)) {
+    errors.tags = `Each tag must be ${MAX_TAG_LENGTH} characters or fewer`;
+  }
+
   if (!errors.type) {
     validateOptions(question, errors);
     validateCorrectAnswer(question, errors);
@@ -121,6 +153,7 @@ function toSavedFields(question) {
     subject: question.subject,
     topic: question.topic,
     difficulty: question.difficulty,
+    tags: Array.isArray(question.tags) ? question.tags : [],
     options: question.type === "mcq" ? question.options : [],
     correctAnswer: question.correctAnswer || undefined
   };
@@ -186,11 +219,34 @@ async function createQuestion(req, res, next) {
   }
 }
 
-// Lists questions, filtered by any of subject, topic, difficulty, and type
+// Searches and filters the question bank (CSQP-F-030, CSQP-F-031).
+// Every filter given must match: q (words in the question text), tag (one
+// or more, comma-separated, all required), subject, topic, difficulty, type.
 async function listQuestions(req, res, next) {
   const filters = {};
   const errors = {};
   const query = req.query || {};
+
+  if (query.q !== undefined) {
+    const keyword = typeof query.q === "string" ? query.q.trim() : "";
+    if (typeof query.q !== "string" || keyword.length > MAX_KEYWORD_LENGTH) {
+      errors.q = `Search text must be ${MAX_KEYWORD_LENGTH} characters or fewer`;
+    } else if (keyword) {
+      // Each word must appear somewhere in the question text
+      filters.$and = keyword.split(/\s+/).map((word) => ({
+        text: { $regex: escapeRegex(word), $options: "i" }
+      }));
+    }
+  }
+
+  if (query.tag !== undefined) {
+    const tags = typeof query.tag === "string" ? normalizeTags(query.tag) : null;
+    if (!tags) {
+      errors.tag = "Tag filter must be text";
+    } else if (tags.length > 0) {
+      filters.tags = { $all: tags };
+    }
+  }
 
   METADATA_FIELDS.forEach((field) => {
     if (typeof query[field] === "string" && query[field].trim()) {
@@ -327,13 +383,35 @@ async function deleteQuestion(req, res, next) {
   }
 }
 
+// Lists the tags already used in the bank, most used first, for suggestions
+async function listTags(req, res, next) {
+  try {
+    const tags = await Question.aggregate([
+      { $match: { isDeleted: false } },
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: 100 }
+    ]);
+
+    return res.status(200).json({
+      status: "success",
+      tags: tags.map((tag) => ({ tag: tag._id, count: tag.count }))
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   createQuestion,
   listQuestions,
+  listTags,
   getQuestion,
   updateQuestion,
   deleteQuestion,
   normalizeQuestionInput,
   validateQuestionInput,
-  toSavedFields
+  toSavedFields,
+  normalizeTags
 };

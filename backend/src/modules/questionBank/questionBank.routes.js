@@ -3,6 +3,7 @@ const multer = require("multer");
 const {
   createQuestion,
   listQuestions,
+  listTags,
   getQuestion,
   updateQuestion,
   deleteQuestion
@@ -51,6 +52,7 @@ router.use(authenticateToken, authorizeRoles("instructor", "admin"));
 router.post("/import", receiveImportFile, importQuestions);
 router.post("/", createQuestion);
 router.get("/", listQuestions);
+router.get("/tags", listTags);
 router.get("/:id", getQuestion);
 router.put("/:id", updateQuestion);
 router.delete("/:id", deleteQuestion);

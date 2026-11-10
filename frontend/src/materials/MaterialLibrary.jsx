@@ -1,4 +1,5 @@
 import MaterialActions from './MaterialActions'
+import { updateDownloadCount, withDownloadCount } from './materialCounts'
 import { useCallback, useEffect, useState } from 'react'
 
 function groupMaterials(materials) {
@@ -40,7 +41,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, bookmarks }) {
   const fileSize = formatFileSize(material.fileSize)
   const uploadedDate = material.createdAt
     ? new Date(material.createdAt).toLocaleDateString()
@@ -60,22 +61,29 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
-      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} />}
+      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} />}
     </article>
   )
 }
 
-export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role }) {
-  const [materials, setMaterials] = useState([])
-  const [resultCount, setResultCount] = useState(0)
+export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role, bookmarks, bookmarksOnly = false }) {
+  const [browseMaterials, setMaterials] = useState([])
+  const [browseCount, setResultCount] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
     courses: [], subjects: [], topics: [],
   })
   const [filters, setFilters] = useState({
     keyword: '', course: '', subject: '', topic: '',
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [browseLoading, setIsLoading] = useState(true)
+  const [browseError, setError] = useState('')
+
+  const bookmarkCounts = new Map(bookmarks?.materials.map((material) => [material._id, material.downloadCount]))
+  const materials = bookmarksOnly ? bookmarks.materials : browseMaterials.map((material) =>
+    withDownloadCount(material, bookmarkCounts.get(material._id)))
+  const resultCount = bookmarksOnly ? materials.length : browseCount
+  const isLoading = bookmarksOnly ? bookmarks.loading && !bookmarks.hasLoaded : browseLoading
+  const error = bookmarksOnly ? (!bookmarks.hasLoaded ? bookmarks.error : '') : browseError
 
   const loadMaterials = useCallback(async (nextFilters, includeOptions = false) => {
     setIsLoading(true)
@@ -108,12 +116,13 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   }, [token, apiBaseUrl, parseResponse])
 
   useEffect(() => {
+    if (bookmarksOnly) return
     const timer = window.setTimeout(
       () => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true),
       0,
     )
     return () => window.clearTimeout(timer)
-  }, [loadMaterials])
+  }, [loadMaterials, bookmarksOnly])
 
   function updateFilter(event) {
     const { name, value } = event.target
@@ -132,9 +141,10 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   }
 
   async function refreshDownloadCount(id) {
+    const completedCount = (materials.find((material) => material._id === id)?.downloadCount ?? 0) + 1
+    bookmarks?.downloaded(id, completedCount)
     // Update only this row; preserve filters and the mounted disclosure tree.
-    setMaterials((current) => current.map((material) => material._id === id
-      ? { ...material, downloadCount: (material.downloadCount ?? 0) + 1 } : material))
+    setMaterials((current) => updateDownloadCount(current, id, completedCount))
     try {
       // The server records completion after flushing the file response.
       await new Promise((resolve) => window.setTimeout(resolve, 150))
@@ -142,8 +152,10 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
         headers: { Authorization: `Bearer ${token}` },
       }))
       const updated = data.materials?.find((material) => material._id === id)
-      if (updated) setMaterials((current) => current.map((material) => material._id === id
-        ? { ...material, downloadCount: Math.max(material.downloadCount ?? 0, updated.downloadCount ?? 0) } : material))
+      if (updated) {
+        setMaterials((current) => updateDownloadCount(current, id, updated.downloadCount ?? 0))
+        bookmarks?.downloaded(id, updated.downloadCount ?? 0)
+      }
     } catch {
       // Keep the completed download's local count if refreshing is unavailable.
     }
@@ -156,12 +168,12 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       <div className="library-heading">
         <div>
           <p className="eyebrow">Study resources</p>
-          <h1 id="library-title">{role === 'instructor' ? 'My Uploads' : 'Browse materials'}</h1>
-          <p>{role === 'instructor' ? 'Find and preview your uploaded study materials.' : 'Search materials shared by instructors.'}</p>
+          <h1 id="library-title" tabIndex={-1}>{bookmarksOnly ? 'My Bookmarks' : role === 'instructor' ? 'My Uploads' : 'Browse materials'}</h1>
+          <p>{bookmarksOnly ? 'Your saved study materials.' : role === 'instructor' ? 'Find and preview your uploaded study materials.' : 'Search materials shared by instructors.'}</p>
         </div>
       </div>
 
-      <form className="library-filters filter-panel" onSubmit={submitFilters}>
+      {!bookmarksOnly && <form className="library-filters filter-panel" onSubmit={submitFilters}>
         <div className="field library-search">
           <label htmlFor="material-keyword">Keyword</label>
           <input
@@ -203,8 +215,13 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
             Clear
           </button>
         </div>
-      </form>
+      </form>}
 
+      {bookmarksOnly && bookmarks.loading && bookmarks.hasLoaded && <p role="status">Refreshing bookmarks…</p>}
+      {!bookmarksOnly && bookmarks?.loading && <p role="status">Loading bookmarks…</p>}
+      {bookmarks?.message && <p className="feedback success" role="status">{bookmarks.message}</p>}
+      {bookmarks?.error && bookmarks.error !== error && <p className="feedback error" role="alert">{bookmarks.error}</p>}
+      {bookmarks && (!bookmarks.ready || bookmarks.error) && <button type="button" className="secondary-button" onClick={bookmarks.reload} disabled={bookmarks.loading}>Retry bookmarks</button>}
       {error && <p className="feedback error" role="alert">{error}</p>}
       <p className="results-count" role="status" aria-live="polite">
         {isLoading
@@ -223,8 +240,8 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
 
       {!isLoading && !error && resultCount === 0 && (
         <div className="empty-state">
-          <h2>No materials found</h2>
-          <p>Try a different keyword or clear the filters to browse the library.</p>
+          <h2>{bookmarksOnly ? 'No bookmarks yet' : 'No materials found'}</h2>
+          <p>{bookmarksOnly ? 'Bookmark materials from Browse materials to find them here.' : 'Try a different keyword or clear the filters to browse the library.'}</p>
         </div>
       )}
 
@@ -253,7 +270,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} />
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} bookmarks={bookmarks} />
                             ))}
                           </div>
                         </details>

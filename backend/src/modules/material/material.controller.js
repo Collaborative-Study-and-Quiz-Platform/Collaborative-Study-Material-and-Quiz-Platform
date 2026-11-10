@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const Material = require("../../models/Material");
+const { containsUnsafeContent } = require("../../middleware/sanitizeJsonBody");
 
 const configuredMaxFileSize = Number.parseInt(
   process.env.MATERIAL_MAX_FILE_SIZE_BYTES || "",
@@ -57,6 +58,8 @@ function validateTags(body) {
     const value = typeof body[field] === "string" ? body[field].trim() : "";
     if (!value) {
       errors[field] = `${field[0].toUpperCase()}${field.slice(1)} is required`;
+    } else if (containsUnsafeContent(value)) {
+      errors[field] = `${field[0].toUpperCase()}${field.slice(1)} contains unsafe content`;
     } else if (value.length > 100) {
       errors[field] = `${field[0].toUpperCase()}${field.slice(1)} must be 100 characters or fewer`;
     } else {

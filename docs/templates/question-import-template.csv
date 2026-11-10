@@ -1,0 +1,5 @@
+text,type,subject,topic,difficulty,option1,option2,option3,option4,correctAnswer
+Which protocol is used to send email?,mcq,Computer Networks,Application Layer,easy,SMTP,FTP,HTTP,SSH,SMTP
+Which port does HTTPS use by default?,mcq,Computer Networks,Application Layer,medium,80,443,22,25,B
+TCP is a connection-oriented protocol.,true_false,Computer Networks,Transport Layer,easy,,,,,true
+Explain what DNS does.,short_answer,Computer Networks,Application Layer,hard,,,,,Translates domain names into IP addresses

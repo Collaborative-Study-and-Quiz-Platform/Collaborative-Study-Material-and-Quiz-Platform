@@ -19,6 +19,38 @@ export const DIFFICULTIES = [
   { value: 'hard', label: 'Hard' },
 ]
 
+export function formatDateTime(value) {
+  if (!value) return ''
+  return new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+// Converts an ISO date to the value a datetime-local input expects (local time)
+export function toDateTimeInput(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  const offset = date.getTimezoneOffset() * 60 * 1000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
+// Converts a datetime-local value back to an ISO date, or null when blank
+export function fromDateTimeInput(value) {
+  return value ? new Date(value).toISOString() : null
+}
+
+// Short description of a quiz window for badges
+export function scheduleSummary(quiz) {
+  if (quiz.scheduleStatus === 'unscheduled' || !quiz.availableFrom) {
+    return { label: 'Not scheduled', tone: 'neutral' }
+  }
+  if (quiz.scheduleStatus === 'upcoming') {
+    return { label: `Opens ${formatDateTime(quiz.availableFrom)}`, tone: 'warning' }
+  }
+  if (quiz.scheduleStatus === 'closed') {
+    return { label: `Closed ${formatDateTime(quiz.availableUntil)}`, tone: 'neutral' }
+  }
+  return { label: `Open until ${formatDateTime(quiz.availableUntil)}`, tone: 'success' }
+}
+
 export function typeLabel(type) {
   return QUESTION_TYPES.find((item) => item.value === type)?.label || type
 }
@@ -84,6 +116,7 @@ export async function apiRequest(path, { token, method = 'GET', body } = {}, can
     const error = new Error(data.message || 'The request could not be completed.')
     error.status = response.status
     error.fieldErrors = data.errors || {}
+    error.data = data
     throw error
   }
   return data

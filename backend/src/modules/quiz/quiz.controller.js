@@ -6,6 +6,7 @@ const {
   validateQuestionInput,
   toSavedFields
 } = require("../questionBank/questionBank.controller");
+const { scheduleStatus, validateSchedule } = require("./quizSchedule");
 
 const MAX_QUESTIONS = 100;
 const MAX_DURATION_MINUTES = 600;
@@ -153,6 +154,10 @@ function snapshot(question, marks) {
   };
 }
 
+function quizView(quiz) {
+  return { ...quiz.toJSON(), scheduleStatus: scheduleStatus(quiz) };
+}
+
 function invalidQuizResponse(res, errors) {
   return res.status(400).json({
     status: "error",
@@ -166,6 +171,10 @@ async function createQuiz(req, res, next) {
   const errors = {};
   const settings = validateSettings(body, errors);
   const plan = validateQuestionEntries(body.questions, errors);
+  const { errors: scheduleErrors, schedule } = validateSchedule(body, {
+    durationMinutes: settings.durationMinutes
+  });
+  Object.assign(errors, scheduleErrors);
 
   try {
     const bankQuestions = await loadBankQuestions(plan, errors);
@@ -194,6 +203,7 @@ async function createQuiz(req, res, next) {
 
     const quiz = await Quiz.create({
       ...settings,
+      ...schedule,
       questions,
       totalMarks: questions.reduce((sum, question) => sum + question.marks, 0),
       createdBy: req.user.id
@@ -202,7 +212,7 @@ async function createQuiz(req, res, next) {
     return res.status(201).json({
       status: "success",
       message: "Quiz created",
-      quiz: quiz.toJSON()
+      quiz: quizView(quiz)
     });
   } catch (error) {
     return next(error);
@@ -219,7 +229,7 @@ async function listQuizzes(req, res, next) {
     return res.status(200).json({
       status: "success",
       count: quizzes.length,
-      quizzes: quizzes.map((quiz) => quiz.toJSON())
+      quizzes: quizzes.map(quizView)
     });
   } catch (error) {
     return next(error);
@@ -252,7 +262,54 @@ async function getQuiz(req, res, next) {
 
     return res.status(200).json({
       status: "success",
-      quiz: quiz.toJSON()
+      quiz: quizView(quiz)
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Sets, changes, or clears the quiz window (CSQP-F-021).
+// Send { availableFrom: null, availableUntil: null } to unschedule.
+async function scheduleQuiz(req, res, next) {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(404).json({ status: "error", message: "Quiz not found" });
+  }
+
+  try {
+    const quiz = await Quiz.findById(req.params.id);
+
+    if (!quiz) {
+      return res.status(404).json({ status: "error", message: "Quiz not found" });
+    }
+
+    if (req.user.role !== "admin" && quiz.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        status: "error",
+        message: "You can only schedule quizzes you created"
+      });
+    }
+
+    const { errors, schedule } = validateSchedule(req.body || {}, {
+      durationMinutes: quiz.durationMinutes
+    });
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "Schedule is invalid",
+        errors
+      });
+    }
+
+    quiz.availableFrom = schedule.availableFrom;
+    quiz.availableUntil = schedule.availableUntil;
+    await quiz.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: schedule.availableFrom ? "Quiz scheduled" : "Quiz schedule removed",
+      quiz: quizView(quiz)
     });
   } catch (error) {
     return next(error);
@@ -262,5 +319,6 @@ async function getQuiz(req, res, next) {
 module.exports = {
   createQuiz,
   listQuizzes,
-  getQuiz
+  getQuiz,
+  scheduleQuiz
 };

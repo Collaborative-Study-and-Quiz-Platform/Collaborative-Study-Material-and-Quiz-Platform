@@ -61,6 +61,9 @@ async function createQuiz({ showAnswers, withShortAnswer = false }) {
   }
 
   return Quiz.create({
+    // Open window, so students can start it (CSQP-F-021)
+    availableFrom: new Date(Date.now() - 60 * 60 * 1000),
+    availableUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
     title: "Networks Quiz 1",
     durationMinutes: 10,
     passingScore: 50,

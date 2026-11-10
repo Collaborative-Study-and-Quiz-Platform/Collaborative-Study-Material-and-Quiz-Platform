@@ -84,6 +84,13 @@
 .quiz-review-warning { border-left: 4px solid #e2a530; }
 .quiz-result-actions { margin-top: 20px; }
 
+/* Quiz scheduling (CSQP-F-021) */
+.quiz-schedule-help { margin-top: -12px; }
+.quiz-schedule-editor { display: grid; gap: 12px; padding: 16px 18px; border: 1px solid #e5e8f0; border-radius: 12px; background: #fafbff; }
+.quiz-schedule-editor input[type='datetime-local'], .upload-panel input[type='datetime-local'] { min-height: 42px; }
+.quiz-window-tag { color: #3d4a9e; background: #eef0ff; }
+.explorer-course > summary .quiz-status { flex: 0 0 auto; }
+
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 760px) {

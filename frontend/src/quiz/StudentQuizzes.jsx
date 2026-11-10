@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { apiRequest, typeLabel } from './quizApi'
+import { apiRequest, formatDateTime, typeLabel } from './quizApi'
 
 const AUTOSAVE_DELAY_MS = 1200
 
@@ -9,8 +9,12 @@ function formatTime(totalSeconds) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
-function statusBadge(attempt) {
-  if (!attempt) return { label: 'Not started', tone: 'neutral' }
+function statusBadge(attempt, quiz) {
+  if (!attempt) {
+    if (quiz.scheduleStatus === 'upcoming') return { label: 'Upcoming', tone: 'neutral' }
+    if (quiz.scheduleStatus === 'closed') return { label: 'Closed', tone: 'neutral' }
+    return { label: 'Open now', tone: 'success' }
+  }
   if (attempt.status === 'in_progress') return { label: 'In progress', tone: 'warning' }
   if (attempt.gradingStatus === 'pending_manual') return { label: 'Awaiting grading', tone: 'warning' }
   if (attempt.passed === true) return { label: 'Passed', tone: 'success' }
@@ -73,8 +77,10 @@ function QuizList({ token, onStart, onViewResult }) {
 
       <div className="quiz-list">
         {!isLoading && !error && quizzes.map((quiz) => {
-          const badge = statusBadge(quiz.attempt)
+          const badge = statusBadge(quiz.attempt, quiz)
           const finished = quiz.attempt && quiz.attempt.status !== 'in_progress'
+          const upcoming = !quiz.attempt && quiz.scheduleStatus === 'upcoming'
+          const closed = !quiz.attempt && quiz.scheduleStatus === 'closed'
           return (
             <article className="quiz-card student-quiz-card" key={quiz._id}>
               <div className="quiz-item-header">
@@ -84,9 +90,14 @@ function QuizList({ token, onStart, onViewResult }) {
               {quiz.description && <p className="quiz-description">{quiz.description}</p>}
               <div className="quiz-tags">
                 <span className="quiz-tag">{quiz.questionCount} question{quiz.questionCount === 1 ? '' : 's'}</span>
-                <span className="quiz-tag">{quiz.totalMarks} marks</span>
+                <span className="quiz-tag">{quiz.totalMarks} mark{quiz.totalMarks === 1 ? '' : 's'}</span>
                 <span className="quiz-tag">{quiz.durationMinutes} min</span>
                 <span className="quiz-tag">Pass at {quiz.passingScore}%</span>
+                {quiz.availableFrom && (
+                  <span className="quiz-tag quiz-window-tag">
+                    {formatDateTime(quiz.availableFrom)} to {formatDateTime(quiz.availableUntil)}
+                  </span>
+                )}
                 {quiz.subjects.map((subject) => <span className="quiz-tag" key={`s-${subject}`}>{subject}</span>)}
                 {quiz.topics.map((topic) => <span className="quiz-tag" key={`t-${topic}`}>{topic}</span>)}
               </div>
@@ -100,6 +111,12 @@ function QuizList({ token, onStart, onViewResult }) {
                   <button type="button" className="quiz-primary-button" onClick={() => onViewResult(quiz)}>
                     View result
                   </button>
+                ) : upcoming ? (
+                  <button type="button" className="quiz-primary-button" disabled>
+                    Opens {formatDateTime(quiz.availableFrom)}
+                  </button>
+                ) : closed ? (
+                  <button type="button" className="quiz-primary-button" disabled>Closed</button>
                 ) : (
                   <button type="button" className="quiz-primary-button" onClick={() => onStart(quiz)}>
                     {quiz.attempt ? 'Resume quiz' : 'Start quiz'}
@@ -144,11 +161,18 @@ function TakeQuiz({ token, quiz, onFinished, onBack }) {
         setAnswers(Object.fromEntries(started.answers.map((answer) => [String(answer.questionId), answer.response])))
       } catch (requestError) {
         if (cancelled) return
-        if (requestError.status === 409) {
+        // 409 with an attempt means it was already submitted, so show the result
+        if (requestError.status === 409 && requestError.data?.attempt) {
           onFinished(quiz)
           return
         }
-        setError(requestError.message)
+        const opensAt = requestError.data?.availableFrom
+        const isUpcoming = opensAt && new Date(opensAt) > new Date()
+        setError(requestError.status === 409 && opensAt
+          ? isUpcoming
+            ? `This quiz opens on ${formatDateTime(opensAt)}.`
+            : `This quiz closed on ${formatDateTime(requestError.data.availableUntil)}.`
+          : requestError.message)
       }
     }
     start()

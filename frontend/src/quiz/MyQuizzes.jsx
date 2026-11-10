@@ -1,6 +1,73 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiRequest } from './quizApi'
+import {
+  apiRequest,
+  fromDateTimeInput,
+  scheduleSummary,
+  toDateTimeInput,
+} from './quizApi'
+import ScheduleFields from './ScheduleFields'
 import { QuestionSummary } from './QuestionBank'
+
+// Set, change, or remove a quiz window (CSQP-F-021)
+function ScheduleEditor({ token, quiz, onSaved }) {
+  const [value, setValue] = useState({
+    availableFrom: toDateTimeInput(quiz.availableFrom),
+    availableUntil: toDateTimeInput(quiz.availableUntil),
+  })
+  const [errors, setErrors] = useState({})
+  const [message, setMessage] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function save(nextValue) {
+    if (Boolean(nextValue.availableFrom) !== Boolean(nextValue.availableUntil)) {
+      setErrors({ [nextValue.availableFrom ? 'availableUntil' : 'availableFrom']: 'Give both times, or leave both empty.' })
+      return
+    }
+    setIsSaving(true)
+    setErrors({})
+    setMessage(null)
+    try {
+      const data = await apiRequest(`/api/quizzes/${quiz._id}/schedule`, {
+        token,
+        method: 'PUT',
+        body: {
+          availableFrom: fromDateTimeInput(nextValue.availableFrom),
+          availableUntil: fromDateTimeInput(nextValue.availableUntil),
+        },
+      })
+      setValue(nextValue)
+      setMessage({ type: 'success', text: data.message })
+      onSaved(data.quiz)
+    } catch (error) {
+      setErrors(error.fieldErrors || {})
+      setMessage({ type: 'error', text: error.message })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <form className="quiz-schedule-editor" noValidate onSubmit={(event) => { event.preventDefault(); save(value) }}>
+      <h3 className="quiz-section-title">Schedule</h3>
+      <ScheduleFields idPrefix={`schedule-${quiz._id}`} value={value} errors={errors}
+        onChange={(next) => { setValue(next); setErrors({}) }} />
+      {message && (
+        <p className={`feedback ${message.type}`} role={message.type === 'error' ? 'alert' : 'status'}>{message.text}</p>
+      )}
+      <div className="quiz-actions">
+        <button type="submit" className="quiz-primary-button" disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save schedule'}
+        </button>
+        {quiz.availableFrom && (
+          <button type="button" className="secondary-button quiz-auto-button" disabled={isSaving}
+            onClick={() => save({ availableFrom: '', availableUntil: '' })}>
+            Remove schedule
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}
 
 // Instructor's own quizzes (Admins see all), newest first
 export default function MyQuizzes({ token, onCreateQuiz }) {
@@ -62,8 +129,9 @@ export default function MyQuizzes({ token, onCreateQuiz }) {
             <details className="explorer-course" key={quiz._id}>
               <summary>
                 <span className="tree-label">{quiz.title}</span>
+                <span className={`quiz-status quiz-status-${scheduleSummary(quiz).tone}`}>{scheduleSummary(quiz).label}</span>
                 <span className="tree-count">
-                  {quiz.questions.length} question{quiz.questions.length === 1 ? '' : 's'} · {quiz.totalMarks} marks · {quiz.durationMinutes} min
+                  {quiz.questions.length} question{quiz.questions.length === 1 ? '' : 's'} · {quiz.totalMarks} mark{quiz.totalMarks === 1 ? '' : 's'} · {quiz.durationMinutes} min
                 </span>
               </summary>
               <div className="quiz-detail">
@@ -73,6 +141,13 @@ export default function MyQuizzes({ token, onCreateQuiz }) {
                   <span className="quiz-tag">{quiz.showAnswers ? 'Answers shown after submitting' : 'Answers hidden from students'}</span>
                   {quiz.createdAt && <span className="quiz-tag">Created {new Date(quiz.createdAt).toLocaleDateString()}</span>}
                 </div>
+                <ScheduleEditor
+                  token={token}
+                  quiz={quiz}
+                  onSaved={(updated) => setQuizzes((current) => current.map((item) => (
+                    item._id === updated._id ? updated : item
+                  )))}
+                />
                 <ol className="quiz-item-list">
                   {quiz.questions.map((question, index) => (
                     <li className="quiz-card" key={question._id}>

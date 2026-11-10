@@ -3,6 +3,7 @@ const Attempt = require("../../models/Attempt");
 const Quiz = require("../../models/Quiz");
 const { gradeAttempt } = require("../grading/grading.service");
 const { createNotification } = require("../notification/notification.service");
+const { attemptDeadline, startBlockedMessage } = require("../quiz/quizSchedule");
 
 // Extra time allowed after the timer ends, so a submit sent just before
 // time-out is not rejected because of network delay
@@ -248,12 +249,21 @@ async function startAttempt(req, res, next) {
     if (!attempt) {
       const startedAt = new Date();
 
+      // CSQP-F-021: a new attempt can only start inside the quiz window
+      const blocked = startBlockedMessage(quiz, startedAt);
+      if (blocked) {
+        return sendError(res, 409, blocked, {
+          availableFrom: quiz.availableFrom,
+          availableUntil: quiz.availableUntil
+        });
+      }
+
       try {
         attempt = await Attempt.create({
           quiz: quiz._id,
           student: req.user.id,
           startedAt,
-          expiresAt: new Date(startedAt.getTime() + quiz.durationMinutes * 60 * 1000)
+          expiresAt: attemptDeadline(quiz, startedAt)
         });
 
         return res.status(201).json({

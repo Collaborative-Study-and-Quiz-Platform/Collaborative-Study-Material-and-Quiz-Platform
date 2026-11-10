@@ -1,0 +1,14 @@
+.material-row:has(.material-comments) { flex-wrap: wrap; }
+.material-comments-slot { flex: 0 0 100%; min-width: 0; }
+.material-comments { min-width: 0; padding-top: 14px; border-top: 1px solid #eceef4; }
+.material-comments-heading, .material-comment-byline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.material-comments h5 { margin: 0; font-size: .95rem; }
+.material-comments button { width: auto; }
+.material-comment-list { display: grid; gap: 12px; max-height: 360px; overflow-y: auto; padding: 0; list-style: none; }
+.material-comment-list li { padding: 10px; border: 1px solid #eceef4; border-radius: 8px; }
+.material-comment-byline { flex-wrap: wrap; font-size: .8rem; }
+.material-comment-byline time { color: #68627a; }
+.material-row .material-comment-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.material-comments form { display: grid; gap: 8px; margin-top: 14px; }
+.material-comments textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; padding: 10px; border: 1px solid #d9deea; border-radius: 8px; }
+.material-comments form > span { color: #68627a; font-size: .75rem; }

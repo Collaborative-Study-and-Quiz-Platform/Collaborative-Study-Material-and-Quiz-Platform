@@ -6,7 +6,20 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { createComment, listComments } = require("./materialComment.controller");
+const { createRateLimiter } = require("../../middleware/rateLimit");
+
 const router = express.Router();
+const commentAccess = [
+  (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); },
+  authenticateToken,
+  authorizeRoles("student", "instructor")
+];
+const commentPostLimit = createRateLimiter({
+  windowMs: Number(process.env.MATERIAL_COMMENT_RATE_LIMIT_WINDOW_MS || 60000),
+  max: Number(process.env.MATERIAL_COMMENT_RATE_LIMIT_MAX || 10),
+  message: "Too many comments. Please wait before posting again."
+});
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -50,6 +63,9 @@ router.get(
   authorizeRoles("student", "instructor"),
   listMaterials
 );
+
+router.get("/:id/comments", ...commentAccess, listComments);
+router.post("/:id/comments", ...commentAccess, commentPostLimit, createComment);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

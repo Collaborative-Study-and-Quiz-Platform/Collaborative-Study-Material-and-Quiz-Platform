@@ -6,7 +6,10 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { getRating, putRating } = require("./materialRating.controller");
+
 const router = express.Router();
+const ratingHeaders = (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); };
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -50,6 +53,9 @@ router.get(
   authorizeRoles("student", "instructor"),
   listMaterials
 );
+
+router.get("/:id/rating", ratingHeaders, authenticateToken, authorizeRoles("student", "instructor"), getRating);
+router.put("/:id/rating", ratingHeaders, authenticateToken, authorizeRoles("student"), putRating);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

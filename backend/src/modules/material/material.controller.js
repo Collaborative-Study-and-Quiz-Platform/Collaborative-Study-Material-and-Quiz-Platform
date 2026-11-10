@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const Material = require("../../models/Material");
+const { ratingSummaries, emptySummary } = require("./materialRating.service");
 const { containsUnsafeContent } = require("../../middleware/sanitizeJsonBody");
 
 const configuredMaxFileSize = Number.parseInt(
@@ -87,6 +88,7 @@ function getQueryValue(query, field) {
 }
 
 async function listMaterials(req, res, next) {
+  res.set("Cache-Control", "private, no-store");
   const allowedQueryFields = new Set(["keyword", "course", "subject", "topic"]);
   if (Object.keys(req.query).some((field) => !allowedQueryFields.has(field))) {
     return res.status(400).json({
@@ -95,7 +97,8 @@ async function listMaterials(req, res, next) {
     });
   }
 
-  const query = req.user.role === "instructor" ? { uploadedBy: req.user.id } : {};
+  const query = { deletedAt: null };
+  if (req.user.role === "instructor") query.uploadedBy = req.user.id;
   const keyword = getQueryValue(req.query, "keyword");
   const course = getQueryValue(req.query, "course");
   const subject = getQueryValue(req.query, "subject");
@@ -118,14 +121,22 @@ async function listMaterials(req, res, next) {
 
   try {
     const materials = await Material.find(query)
-      .select("-storageLocation -__v")
+      .select("-storageLocation -__v -deletedAt")
       .sort({ createdAt: -1, _id: -1 })
       .lean();
 
+    let summaries;
+    try {
+      summaries = await ratingSummaries(materials.map((material) => material._id), req.user);
+    } catch (error) {
+      console.error("Unable to load material rating summaries:", error.message);
+      // Optional rating data must not take the material library offline.
+    }
     return res.status(200).json({
       status: "success",
       count: materials.length,
-      materials: materials.map((material) => ({ ...material, downloadCount: material.downloadCount ?? 0 }))
+      materials: materials.map((material) => ({ ...material, downloadCount: material.downloadCount ?? 0,
+        ratingSummary: summaries ? summaries.get(String(material._id)) || emptySummary() : null }))
     });
   } catch (error) {
     return next(error);

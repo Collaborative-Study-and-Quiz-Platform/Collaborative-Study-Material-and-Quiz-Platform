@@ -1,5 +1,6 @@
 import MaterialActions from './MaterialActions'
-import { useCallback, useEffect, useState } from 'react'
+import MaterialRating from './MaterialRating'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 function groupMaterials(materials) {
   const courses = new Map()
@@ -40,7 +41,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, canRate, parseResponse, onRated }) {
   const fileSize = formatFileSize(material.fileSize)
   const uploadedDate = material.createdAt
     ? new Date(material.createdAt).toLocaleDateString()
@@ -60,6 +61,8 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
+      {canAccessFiles && <MaterialRating key={`${material._id}-${token}`} material={material} token={token}
+        apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} canRate={canRate} onSummaryChange={(summary) => onRated(material._id, summary)} />}
       {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} />}
     </article>
   )
@@ -67,6 +70,8 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
 
 export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role }) {
   const [materials, setMaterials] = useState([])
+  const [loadedToken, setLoadedToken] = useState(null)
+  const listRequest = useRef(null)
   const [resultCount, setResultCount] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
     courses: [], subjects: [], topics: [],
@@ -78,6 +83,9 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   const [error, setError] = useState('')
 
   const loadMaterials = useCallback(async (nextFilters, includeOptions = false) => {
+    listRequest.current?.abort()
+    const controller = new AbortController()
+    listRequest.current = controller
     setIsLoading(true)
     setError('')
     const params = new URLSearchParams()
@@ -88,10 +96,12 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
     try {
       const data = await parseResponse(await fetch(
         `${apiBaseUrl}/api/materials?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal },
       ))
+      if (controller.signal.aborted) return
       const nextMaterials = Array.isArray(data.materials) ? data.materials : []
       setMaterials(nextMaterials)
+      setLoadedToken(token)
       setResultCount(Number.isFinite(data.count) ? data.count : nextMaterials.length)
       if (includeOptions) {
         setFilterOptions({
@@ -101,9 +111,9 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
         })
       }
     } catch (requestError) {
-      setError(requestError.message || 'Unable to load study materials.')
+      if (!controller.signal.aborted) setError(requestError.message || 'Unable to load study materials.')
     } finally {
-      setIsLoading(false)
+      if (!controller.signal.aborted) setIsLoading(false)
     }
   }, [token, apiBaseUrl, parseResponse])
 
@@ -112,7 +122,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       () => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true),
       0,
     )
-    return () => window.clearTimeout(timer)
+    return () => { window.clearTimeout(timer); listRequest.current?.abort() }
   }, [loadMaterials])
 
   function updateFilter(event) {
@@ -149,7 +159,13 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
     }
   }
 
+  function updateRating(id, ratingSummary) {
+    setMaterials((current) => current.map((material) => material._id === id ? { ...material, ratingSummary } : material))
+  }
+
   const courseGroups = groupMaterials(materials)
+  // Summaries contain the student's own vote; never render a previous session's data.
+  const isCurrentSession = loadedToken === token
 
   return (
     <section className="library" aria-labelledby="library-title">
@@ -207,28 +223,28 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
 
       {error && <p className="feedback error" role="alert">{error}</p>}
       <p className="results-count" role="status" aria-live="polite">
-        {isLoading
+        {isLoading || (!isCurrentSession && !error)
           ? 'Loading materials...'
           : error
             ? 'Materials unavailable.'
             : `${resultCount} material${resultCount === 1 ? '' : 's'} in ${courseGroups.length} course${courseGroups.length === 1 ? '' : 's'}`}
       </p>
 
-      {isLoading && (
+      {(isLoading || (!isCurrentSession && !error)) && (
         <div className="explorer-state" role="status">
           <span className="loading-indicator" aria-hidden="true" />
           <p>Loading study materials…</p>
         </div>
       )}
 
-      {!isLoading && !error && resultCount === 0 && (
+      {isCurrentSession && !isLoading && !error && resultCount === 0 && (
         <div className="empty-state">
           <h2>No materials found</h2>
           <p>Try a different keyword or clear the filters to browse the library.</p>
         </div>
       )}
 
-      {!isLoading && !error && resultCount > 0 && (
+      {isCurrentSession && !isLoading && !error && resultCount > 0 && (
         <div className="material-explorer" aria-label="Study materials by course, subject, and topic">
           {courseGroups.map((course) => (
             <details className="explorer-course" key={course.name} open>
@@ -253,7 +269,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} />
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} canRate={role === 'student'} parseResponse={parseResponse} onRated={updateRating} />
                             ))}
                           </div>
                         </details>

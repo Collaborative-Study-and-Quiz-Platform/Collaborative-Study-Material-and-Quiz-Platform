@@ -4,6 +4,8 @@ const authenticateToken = require("../../middleware/authenticateToken");
 const authorizeRoles = require("../../middleware/authorizeRoles");
 const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.controller");
 
+const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
+
 const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -48,5 +50,8 @@ router.get(
   authorizeRoles("student", "instructor"),
   listMaterials
 );
+
+router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
+router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);
 
 module.exports = router;

@@ -237,7 +237,7 @@ function DashboardHome({ user, role, onNavigate }) {
     ]
     : [
       { title: 'Upload Study Material', description: 'Share resources organized by course, subject, and topic.', icon: 'upload', page: 'upload' },
-      { title: 'Browse Materials', description: 'Explore shared study resources by course, subject, and topic.', icon: 'materials', page: 'browse' },
+      { title: 'My Uploads', description: 'Find and preview your uploaded study materials.', icon: 'materials', page: 'browse' },
       { title: 'Question Bank', description: 'Add, edit, and reuse questions by subject, topic, and difficulty.', icon: 'questions', page: 'questions' },
       { title: 'Create Quiz', description: 'Build a timed quiz from bank questions or new ones.', icon: 'quiz', page: 'create-quiz' },
       { title: 'Manage My Materials', description: 'Review and organize materials you have uploaded.', icon: 'manage', comingSoon: true },
@@ -447,7 +447,7 @@ function App() {
     const canManageQuizzes = isInstructor || role === 'admin'
     const pageLabels = {
       dashboard: 'Dashboard',
-      browse: 'Browse materials',
+      browse: isInstructor ? 'My Uploads' : 'Browse materials',
       upload: 'Upload study material',
       questions: 'Question bank',
       'create-quiz': 'Create quiz',
@@ -483,8 +483,8 @@ function App() {
             {(isStudent || isInstructor) && (
               <button type="button" className={activePage === 'browse' ? 'active' : ''}
                 aria-current={activePage === 'browse' ? 'page' : undefined}
-                onClick={() => navigateTo('browse')} title="Browse materials">
-                <span className="nav-icon" aria-hidden="true">▤</span><span className="nav-label">Browse materials</span>
+                onClick={() => navigateTo('browse')} title={isInstructor ? 'My Uploads' : 'Browse materials'}>
+                <span className="nav-icon" aria-hidden="true">▤</span><span className="nav-label">{isInstructor ? 'My Uploads' : 'Browse materials'}</span>
               </button>
             )}
             {isInstructor && (
@@ -545,7 +545,7 @@ function App() {
               {activePage === 'dashboard' && (
                 <DashboardHome user={session.user} role={role} onNavigate={navigateTo} />
               )}
-              {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} />}
+              {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} role={role} />}
               {activePage === 'questions' && canManageQuizzes && (
                 <QuestionBank token={session.token} user={session.user} />
               )}

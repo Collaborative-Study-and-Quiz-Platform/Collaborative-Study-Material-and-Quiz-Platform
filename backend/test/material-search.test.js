@@ -103,6 +103,8 @@ test("returns materials and supports keyword, course, subject, topic, and combin
 test("allows students and instructors to browse while preserving other authorization checks", async () => {
   const metadataMissing = materialData();
   delete metadataMissing.tags;
+  // Native collection inserts bypass the schema's ObjectId casting.
+  metadataMissing.uploadedBy = new mongoose.Types.ObjectId(instructorId);
   await Material.collection.insertOne(metadataMissing);
 
   const empty = await browse("?keyword=&course=&subject=&topic=");

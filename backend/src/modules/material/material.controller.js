@@ -92,7 +92,7 @@ async function listMaterials(req, res, next) {
     });
   }
 
-  const query = {};
+  const query = req.user.role === "instructor" ? { uploadedBy: req.user.id } : {};
   const keyword = getQueryValue(req.query, "keyword");
   const course = getQueryValue(req.query, "course");
   const subject = getQueryValue(req.query, "subject");
@@ -122,7 +122,7 @@ async function listMaterials(req, res, next) {
     return res.status(200).json({
       status: "success",
       count: materials.length,
-      materials
+      materials: materials.map((material) => ({ ...material, downloadCount: material.downloadCount ?? 0 }))
     });
   } catch (error) {
     return next(error);

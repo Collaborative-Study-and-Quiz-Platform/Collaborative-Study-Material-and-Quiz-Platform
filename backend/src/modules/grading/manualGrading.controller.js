@@ -8,6 +8,7 @@ const User = require("../../models/User");
 const { createNotification } = require("../notification/notification.service");
 const { finalizeIfTimedOut } = require("../attempt/attempt.controller");
 const { gradeAttempt, summarizeResults } = require("./grading.service");
+const { buildResultsCsv, resultsFilename } = require("./resultsCsv");
 
 const MAX_FEEDBACK_LENGTH = 1000;
 
@@ -292,7 +293,46 @@ async function gradeSubmission(req, res, next) {
   }
 }
 
+// GET /api/quizzes/:quizId/submissions/export (CSQP-F-026)
+// Downloads every attempt as CSV: one row per attempt, oldest first
+async function exportSubmissions(req, res, next) {
+  try {
+    const quiz = await loadOwnedQuiz(req, res);
+    if (!quiz) {
+      return undefined;
+    }
+
+    const attempts = await Attempt.find({ quiz: quiz._id }).sort({ startedAt: 1 });
+    await Promise.all(attempts.map(async (attempt) => {
+      await finalizeIfTimedOut(attempt, quiz);
+      if (attempt.status !== "in_progress" && !attempt.grading) {
+        attempt.grading = gradeAttempt(quiz, attempt.answers);
+        await attempt.save();
+      }
+    }));
+
+    const students = await User.find({ _id: { $in: attempts.map((attempt) => attempt.student) } }).select("name email");
+    const studentsById = new Map(students.map((user) => [user._id.toString(), user]));
+    const rows = attempts.map((attempt) => ({
+      attempt,
+      student: studentSummary(studentsById.get(attempt.student.toString()), attempt.student)
+    }));
+
+    res.set({
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${resultsFilename(quiz)}"`,
+      "Cache-Control": "no-store",
+      // Lets the frontend (on another origin) read the file name
+      "Access-Control-Expose-Headers": "Content-Disposition"
+    });
+    return res.status(200).send(buildResultsCsv(quiz, rows));
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
+  exportSubmissions,
   listSubmissions,
   getSubmission,
   gradeSubmission,

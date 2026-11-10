@@ -82,8 +82,39 @@ function gradeAttempt(quiz, answers) {
   };
 }
 
+// Recalculates the totals from per-question results, for example after an
+// Instructor enters marks for short answers (CSQP-F-024)
+function summarizeResults(results, passingScore) {
+  let score = 0;
+  let maxScore = 0;
+  let pendingMarks = 0;
+
+  results.forEach((result) => {
+    maxScore += result.maxMarks;
+    if (result.marksAwarded === null || result.marksAwarded === undefined) {
+      pendingMarks += result.maxMarks;
+    } else {
+      score += result.marksAwarded;
+    }
+  });
+
+  score = roundToTwo(score);
+  const gradingStatus = pendingMarks > 0 ? "pending_manual" : "complete";
+  const percentage = maxScore > 0 ? roundToTwo((score / maxScore) * 100) : 0;
+
+  return {
+    score,
+    maxScore,
+    pendingMarks,
+    percentage,
+    gradingStatus,
+    passed: gradingStatus === "complete" ? percentage >= passingScore : null
+  };
+}
+
 module.exports = {
   gradeAttempt,
+  summarizeResults,
   isAutoGraded,
   isCorrectAnswer
 };

@@ -340,7 +340,9 @@ function answerReview(attempt, quiz) {
       correctAnswer: question.correctAnswer || null,
       isCorrect: result ? result.isCorrect : null,
       marksAwarded: result ? result.marksAwarded : null,
-      maxMarks: question.marks
+      maxMarks: question.marks,
+      manuallyGraded: Boolean(result?.manuallyGraded),
+      feedback: result?.feedback || null
     };
   });
 }

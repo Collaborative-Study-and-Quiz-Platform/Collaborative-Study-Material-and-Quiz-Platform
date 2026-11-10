@@ -319,3 +319,23 @@ Set the window when creating the quiz by adding both fields to `POST /api/quizze
 Send both fields as `null` to remove the schedule. Both times must be given together, the end must be after the start and in the future, and the window must be at least as long as the quiz duration; otherwise the request returns HTTP `400`. Only the Instructor who created the quiz, or an Admin, can schedule it; others get `403`. Instructor quiz responses include `scheduleStatus`: `unscheduled`, `upcoming`, `open`, or `closed`.
 
 For students, `POST /api/quizzes/:quizId/attempt/start` returns HTTP `409` before the start time, after the end time, or when the quiz is not scheduled, with the window in `availableFrom` and `availableUntil`. An attempt's deadline is the earlier of its timer and the window's end, so no attempt runs past closing time. `GET /api/quizzes/available` lists open and upcoming quizzes, each with its window and `scheduleStatus`, plus any quiz the student has already attempted so its result stays reachable.
+
+## Manual Grading
+
+Short-answer questions are graded by hand (CSQP-F-024). These routes need a JWT for the Instructor who created the quiz, or an Admin; other users get HTTP `403`.
+
+`GET /api/quizzes/:quizId/submissions` lists every attempt with the student's name and email, its status, score, and `pendingQuestions` still to grade, plus a count of submissions `awaitingGrading`. Attempts whose time ran out are auto-submitted first.
+
+`GET /api/quizzes/:quizId/submissions/:attemptId` shows one submission: every question with the student's response, the correct or model answer, and the marks awarded so far.
+
+`PUT /api/quizzes/:quizId/submissions/:attemptId/grades` saves marks for short answers:
+
+```json
+{
+  "grades": [
+    { "questionId": "<quiz question _id>", "marks": 1.5, "feedback": "Good, but name the flags." }
+  ]
+}
+```
+
+`marks` is a number from 0 to the question's marks, in steps of 0.5, and `feedback` is optional text of up to 1000 characters. Only short-answer questions can be graded this way; invalid grades return HTTP `422`, and an attempt still in progress returns `409`. The attempt's `score`, `percentage`, `pendingMarks`, `gradingStatus`, and `passed` are recalculated from all question marks, so manual marks are added to the auto-graded score. Marks can be changed later. When the last short answer is graded the student gets a notification, and their result (`GET /api/quizzes/:quizId/attempt/result`) shows the new score, with each short answer's marks and feedback in the answer review when answers are visible.

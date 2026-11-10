@@ -7,6 +7,7 @@ const materialRoutes = require("./modules/material/material.routes");
 const quizRoutes = require("./modules/quiz/quiz.routes");
 const attemptRoutes = require("./modules/attempt/attempt.routes");
 const availableQuizRoutes = require("./modules/quiz/availableQuiz.routes");
+const manualGradingRoutes = require("./modules/grading/manualGrading.routes");
 const notificationRoutes = require("./modules/notification/notification.routes");
 const requireSecureTransport = require("./middleware/requireSecureTransport");
 const { sanitizeJsonBody } = require("./middleware/sanitizeJsonBody");
@@ -50,6 +51,7 @@ app.use("/api/materials", materialRoutes);
 // Registered before quizRoutes so students can reach their quiz routes
 app.use("/api/quizzes/available", availableQuizRoutes);
 app.use("/api/quizzes/:quizId/attempt", attemptRoutes);
+app.use("/api/quizzes/:quizId/submissions", manualGradingRoutes);
 app.use("/api/quizzes", quizRoutes);
 
 app.use((error, req, res, next) => {

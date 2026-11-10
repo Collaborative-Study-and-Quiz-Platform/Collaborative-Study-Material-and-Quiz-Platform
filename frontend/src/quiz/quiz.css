@@ -98,6 +98,16 @@
 .quiz-picker .question-filters .library-actions { grid-column: span 3; }
 .question-tag { color: #3d4a9e; background: #eef0ff; }
 
+/* Manual grading (CSQP-F-024) */
+.submission-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 16px; }
+.submission-student { display: grid; gap: 3px; min-width: 0; }
+.submission-student strong { color: #27334a; font-size: .9rem; }
+.submission-student span { overflow: hidden; color: #8a92a4; font-size: .78rem; text-overflow: ellipsis; }
+.submission-score { color: #27334a; font-size: .84rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.quiz-grade-fields { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 14px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e1e4ee; }
+.quiz-grade-fields label { color: #2a354c; font-size: .8rem; font-weight: 700; }
+.quiz-feedback { padding: 8px 10px; border-radius: 8px; color: #3d4a9e; background: #f4f5ff; }
+
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 1080px) {
@@ -106,6 +116,8 @@
 }
 @media (max-width: 760px) {
   .quiz-grid-2, .quiz-grid-3 { grid-template-columns: 1fr; }
+  .submission-row { grid-template-columns: 1fr auto; }
+  .quiz-grade-fields { grid-template-columns: 1fr; }
   .quiz-result-summary { flex-direction: column; align-items: stretch; }
   .quiz-timer-bar { top: 60px; }
   .quiz-picker .library-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }

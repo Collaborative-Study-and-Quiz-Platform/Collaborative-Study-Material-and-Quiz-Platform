@@ -20,6 +20,11 @@ const questionSchema = new mongoose.Schema(
       type: [String],
       default: []
     },
+    // Free-form labels for search and filtering (CSQP-F-031), stored lower case
+    tags: {
+      type: [String],
+      default: []
+    },
     correctAnswer: {
       type: String,
       trim: true,
@@ -60,6 +65,7 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+questionSchema.index({ tags: 1 });
 questionSchema.index({ subject: 1, topic: 1, difficulty: 1, type: 1 });
 
 questionSchema.set("toJSON", {

@@ -16,7 +16,7 @@
 .quiz-editor, .quiz-picker { margin: 0 0 20px; }
 .quiz-filters { margin-top: 0; }
 .quiz-picker .quiz-filters { padding: 0; }
-.quiz-picker .library-filters { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+.quiz-picker .library-filters:not(.question-filters) { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
 
 .quiz-list, .quiz-item-list { display: grid; gap: 10px; }
 .quiz-item-list { margin: 0; padding: 0; list-style: none; }
@@ -91,8 +91,19 @@
 .quiz-window-tag { color: #3d4a9e; background: #eef0ff; }
 .explorer-course > summary .quiz-status { flex: 0 0 auto; }
 
+/* Question bank search and filters (CSQP-F-031) */
+.question-filters { grid-template-columns: minmax(200px, 1.6fr) repeat(3, minmax(120px, 1fr)); }
+.question-filters .library-actions { grid-column: span 2; justify-self: end; width: min(100%, 220px); }
+.quiz-picker .question-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.quiz-picker .question-filters .library-actions { grid-column: span 3; }
+.question-tag { color: #3d4a9e; background: #eef0ff; }
+
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+@media (max-width: 1080px) {
+  .question-filters, .quiz-picker .question-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .question-filters .library-actions, .quiz-picker .question-filters .library-actions { grid-column: span 2; justify-self: stretch; width: 100%; }
+}
 @media (max-width: 760px) {
   .quiz-grid-2, .quiz-grid-3 { grid-template-columns: 1fr; }
   .quiz-result-summary { flex-direction: column; align-items: stretch; }

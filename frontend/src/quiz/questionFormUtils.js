@@ -6,6 +6,7 @@ export const emptyQuestion = {
   subject: '',
   topic: '',
   difficulty: 'easy',
+  tags: '',
 }
 
 // Turns a saved question into form values
@@ -18,7 +19,15 @@ export function questionToForm(question) {
     subject: question.subject || '',
     topic: question.topic || '',
     difficulty: question.difficulty || 'easy',
+    tags: (question.tags || []).join(', '),
   }
+}
+
+// Splits "tcp, Networks; exam" into ['tcp', 'networks', 'exam']
+export function parseTags(text) {
+  return [...new Set((text || '').split(/[,;]/)
+    .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, ' '))
+    .filter(Boolean))]
 }
 
 // Builds the request body the question bank API expects
@@ -29,6 +38,7 @@ export function formToQuestion(form) {
     subject: form.subject.trim(),
     topic: form.topic.trim(),
     difficulty: form.difficulty,
+    tags: parseTags(form.tags),
   }
 
   if (form.type === 'mcq') {
@@ -54,6 +64,8 @@ export function validateQuestionForm(form) {
   else if (question.text.length > 2000) errors.text = 'Question text must be 2000 characters or fewer.'
   if (!question.subject) errors.subject = 'Subject is required.'
   if (!question.topic) errors.topic = 'Topic is required.'
+  if (question.tags.length > 10) errors.tags = 'Use at most 10 tags.'
+  else if (question.tags.some((tag) => tag.length > 30)) errors.tags = 'Each tag must be 30 characters or fewer.'
 
   if (form.type === 'mcq') {
     if (question.options.length < 2 || question.options.length > 6) {
@@ -70,4 +82,15 @@ export function validateQuestionForm(form) {
   }
 
   return errors
+}
+
+export const emptyQuestionFilters = { q: '', tag: '', subject: '', topic: '', difficulty: '', type: '' }
+
+// Turns filter values into a query string for GET /api/questions
+export function questionFilterQuery(filters) {
+  const params = new URLSearchParams()
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value.trim()) params.set(key, value.trim())
+  })
+  return params.toString()
 }

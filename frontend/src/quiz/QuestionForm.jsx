@@ -101,6 +101,19 @@ export function QuestionFields({ form, onChange, errors = {}, idPrefix }) {
         </div>
       </div>
 
+      <div className="field">
+        <label htmlFor={`${idPrefix}-tags`}>Tags (optional)</label>
+        <input
+          id={`${idPrefix}-tags`}
+          type="text"
+          value={form.tags || ''}
+          placeholder="For example: tcp, reliability, exam"
+          onChange={(event) => update('tags', event.target.value)}
+        />
+        <p className="field-help">Separate tags with commas. They help you find this question later.</p>
+        <FieldError message={errors.tags} />
+      </div>
+
       {form.type === 'mcq' && (
         <fieldset className="quiz-fieldset">
           <legend>Options (select the correct one)</legend>

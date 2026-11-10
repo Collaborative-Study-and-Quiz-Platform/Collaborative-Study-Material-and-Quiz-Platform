@@ -180,6 +180,14 @@ All `/api/questions` routes need a JWT for an Instructor or Admin. Students get 
 
 Only the Instructor who created a question, or an Admin, can edit or delete it. Other Instructors get `403`.
 
+### Search, filters and tags
+
+Questions can carry up to 10 optional `tags` (each up to 30 characters), sent as a list or as comma-separated text, for example `"tcp, reliability"`. Tags are saved trimmed, in lower case, and without repeats. Bulk imports accept an optional `tags` column in the same format.
+
+`GET /api/questions` also accepts `q` (words that must all appear in the question text, ignoring case) and `tag` (one or more comma-separated tags, all required). Every filter given must match (CSQP-F-031), so `/api/questions?q=handshake&tag=tcp&difficulty=hard` returns only hard questions tagged `tcp` whose text contains "handshake". Search text over 100 characters, or a repeated `q` or `tag` parameter, returns `400`.
+
+`GET /api/questions/tags` lists the tags in use with how many questions have each, most used first, for suggestions.
+
 ## Study material upload
 
 `POST /api/materials` accepts a `multipart/form-data` request with a `file` field and

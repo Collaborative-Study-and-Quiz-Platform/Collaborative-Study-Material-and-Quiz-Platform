@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import './quiz/quiz.css'
 import QuestionBank from './quiz/QuestionBank'
 import CreateQuiz from './quiz/CreateQuiz'
 import MyQuizzes from './quiz/MyQuizzes'
 import StudentQuizzes from './quiz/StudentQuizzes'
+import MaterialLibrary from './materials/MaterialLibrary'
+import MaterialUpload from './materials/MaterialUpload'
+import handleMaterialUpload from './materials/handleMaterialUpload'
 import NotificationCenter from './notifications/NotificationCenter'
 import { apiRequest, configureSessionRefresh } from './quiz/quizApi'
 
@@ -56,68 +59,6 @@ async function parseResponse(response) {
     throw error
   }
   return data
-}
-
-function groupMaterials(materials) {
-  const courses = new Map()
-
-  materials.forEach((material) => {
-    const courseName = material.tags?.course || 'Course unavailable'
-    const subjectName = material.tags?.subject || 'Subject unavailable'
-    const topicName = material.tags?.topic || 'Topic unavailable'
-
-    if (!courses.has(courseName)) courses.set(courseName, new Map())
-    const subjects = courses.get(courseName)
-    if (!subjects.has(subjectName)) subjects.set(subjectName, new Map())
-    const topics = subjects.get(subjectName)
-    if (!topics.has(topicName)) topics.set(topicName, [])
-    topics.get(topicName).push(material)
-  })
-
-  return [...courses.entries()].map(([name, subjects]) => ({
-    name,
-    materialCount: [...subjects.values()].reduce(
-      (total, topics) => total + [...topics.values()].reduce((count, items) => count + items.length, 0),
-      0,
-    ),
-    subjects: [...subjects.entries()].map(([subjectName, topics]) => ({
-      name: subjectName,
-      materialCount: [...topics.values()].reduce((count, items) => count + items.length, 0),
-      topics: [...topics.entries()].map(([topicName, items]) => ({
-        name: topicName,
-        materials: items,
-      })),
-    })),
-  }))
-}
-
-function formatFileSize(bytes) {
-  if (!Number.isFinite(bytes) || bytes <= 0) return ''
-  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function MaterialRow({ material }) {
-  const fileSize = formatFileSize(material.fileSize)
-  const uploadedDate = material.createdAt
-    ? new Date(material.createdAt).toLocaleDateString()
-    : ''
-
-  return (
-    <article className="material-row">
-      <span className="file-badge">{material.fileType?.toUpperCase() || 'FILE'}</span>
-      <div className="material-row-content">
-        <h4>{material.originalFilename || 'Filename unavailable'}</h4>
-        <p>
-          {[
-            material.mimeType,
-            fileSize && `Size ${fileSize}`,
-            uploadedDate && `Uploaded ${uploadedDate}`,
-          ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
-        </p>
-      </div>
-    </article>
-  )
 }
 
 function ForgotPassword({ onBack }) {
@@ -262,192 +203,6 @@ function ResetPassword({ token, onBack }) {
       <button type="button" className="secondary-button" onClick={onBack}>
         Back to login
       </button>
-    </section>
-  )
-}
-
-function MaterialLibrary({ token }) {
-  const [materials, setMaterials] = useState([])
-  const [resultCount, setResultCount] = useState(0)
-  const [filterOptions, setFilterOptions] = useState({
-    courses: [], subjects: [], topics: [],
-  })
-  const [filters, setFilters] = useState({
-    keyword: '', course: '', subject: '', topic: '',
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  const loadMaterials = useCallback(async (nextFilters, includeOptions = false) => {
-    setIsLoading(true)
-    setError('')
-    const params = new URLSearchParams()
-    Object.entries(nextFilters).forEach(([key, value]) => {
-      if (value.trim()) params.set(key, value.trim())
-    })
-
-    try {
-      const data = await parseResponse(await fetch(
-        `${API_BASE_URL}/api/materials?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      ))
-      const nextMaterials = Array.isArray(data.materials) ? data.materials : []
-      setMaterials(nextMaterials)
-      setResultCount(Number.isFinite(data.count) ? data.count : nextMaterials.length)
-      if (includeOptions) {
-        setFilterOptions({
-          courses: [...new Set(nextMaterials.map((m) => m.tags?.course).filter(Boolean))].sort(),
-          subjects: [...new Set(nextMaterials.map((m) => m.tags?.subject).filter(Boolean))].sort(),
-          topics: [...new Set(nextMaterials.map((m) => m.tags?.topic).filter(Boolean))].sort(),
-        })
-      }
-    } catch (requestError) {
-      setError(requestError.message || 'Unable to load study materials.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [token])
-
-  useEffect(() => {
-    const timer = window.setTimeout(
-      () => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true),
-      0,
-    )
-    return () => window.clearTimeout(timer)
-  }, [loadMaterials])
-
-  function updateFilter(event) {
-    const { name, value } = event.target
-    setFilters((current) => ({ ...current, [name]: value }))
-  }
-
-  function submitFilters(event) {
-    event.preventDefault()
-    loadMaterials(filters)
-  }
-
-  function clearFilters() {
-    const emptyFilters = { keyword: '', course: '', subject: '', topic: '' }
-    setFilters(emptyFilters)
-    loadMaterials(emptyFilters)
-  }
-
-  const courseGroups = groupMaterials(materials)
-
-  return (
-    <section className="library" aria-labelledby="library-title">
-      <div className="library-heading">
-        <div>
-          <p className="eyebrow">Study resources</p>
-          <h1 id="library-title">Browse materials</h1>
-          <p>Search materials shared by instructors.</p>
-        </div>
-      </div>
-
-      <form className="library-filters filter-panel" onSubmit={submitFilters}>
-        <div className="field library-search">
-          <label htmlFor="material-keyword">Keyword</label>
-          <input
-            id="material-keyword"
-            name="keyword"
-            type="search"
-            value={filters.keyword}
-            onChange={updateFilter}
-            placeholder="File name, course, subject, topic"
-          />
-        </div>
-
-        {[
-          ['course', 'Course', filterOptions.courses],
-          ['subject', 'Subject', filterOptions.subjects],
-          ['topic', 'Topic', filterOptions.topics],
-        ].map(([name, label, options]) => (
-          <div className="field" key={name}>
-            <label htmlFor={`material-filter-${name}`}>{label}</label>
-            <select
-              id={`material-filter-${name}`}
-              name={name}
-              value={filters[name]}
-              onChange={updateFilter}
-            >
-              <option value="">All {label.toLowerCase()}s</option>
-              {options.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        ))}
-
-        <div className="library-actions">
-          <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Searching...' : 'Search'}
-          </button>
-          <button type="button" className="secondary-button" onClick={clearFilters} disabled={isLoading}>
-            Clear
-          </button>
-        </div>
-      </form>
-
-      {error && <p className="feedback error" role="alert">{error}</p>}
-      <p className="results-count" role="status" aria-live="polite">
-        {isLoading
-          ? 'Loading materials...'
-          : error
-            ? 'Materials unavailable.'
-            : `${resultCount} material${resultCount === 1 ? '' : 's'} in ${courseGroups.length} course${courseGroups.length === 1 ? '' : 's'}`}
-      </p>
-
-      {isLoading && (
-        <div className="explorer-state" role="status">
-          <span className="loading-indicator" aria-hidden="true" />
-          <p>Loading study materials…</p>
-        </div>
-      )}
-
-      {!isLoading && !error && resultCount === 0 && (
-        <div className="empty-state">
-          <h2>No materials found</h2>
-          <p>Try a different keyword or clear the filters to browse the library.</p>
-        </div>
-      )}
-
-      {!isLoading && !error && resultCount > 0 && (
-        <div className="material-explorer" aria-label="Study materials by course, subject, and topic">
-          {courseGroups.map((course) => (
-            <details className="explorer-course" key={course.name} open>
-              <summary>
-                <span className="tree-label">{course.name}</span>
-                <span className="tree-count">{course.materialCount} material{course.materialCount === 1 ? '' : 's'}</span>
-              </summary>
-              <div className="explorer-subjects">
-                {course.subjects.map((subject) => (
-                  <details className="explorer-subject" key={subject.name}>
-                    <summary>
-                      <span className="tree-label">{subject.name}</span>
-                      <span className="tree-count">{subject.materialCount} material{subject.materialCount === 1 ? '' : 's'}</span>
-                    </summary>
-                    <div className="explorer-topics">
-                      {subject.topics.map((topic) => (
-                        <details className="explorer-topic" key={topic.name}>
-                          <summary>
-                            <span className="tree-label">{topic.name}</span>
-                            <span className="tree-count">{topic.materials.length} material{topic.materials.length === 1 ? '' : 's'}</span>
-                          </summary>
-                          <div className="topic-materials">
-                            {topic.materials.map((material) => (
-                              <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material} />
-                            ))}
-                          </div>
-                        </details>
-                      ))}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
     </section>
   )
 }
@@ -671,40 +426,16 @@ function App() {
     setFeedback(null)
   }
 
-  async function handleMaterialUpload(event) {
-    event.preventDefault()
-    const { file, course, subject, topic } = materialForm
-    const extension = file?.name.split('.').pop()?.toLowerCase()
-    if (!file || !['pdf', 'docx', 'ppt'].includes(extension)) {
-      setFeedback({ type: 'error', text: 'Choose a PDF, DOCX, or PPT file.' })
-      return
-    }
-    if (![course, subject, topic].every((value) => value.trim())) {
-      setFeedback({ type: 'error', text: 'Course, subject, and topic are required.' })
-      return
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('course', course.trim())
-    formData.append('subject', subject.trim())
-    formData.append('topic', topic.trim())
-    setIsSubmitting(true)
-    setFeedback(null)
-    try {
-      await apiRequest('/api/materials', {
-        token: session.token,
-        method: 'POST',
-        body: formData,
-      })
-      setMaterialForm({ file: null, course: '', subject: '', topic: '' })
-      event.target.reset()
-      setFeedback({ type: 'success', text: 'Study material uploaded successfully.' })
-    } catch (error) {
-      setFeedback({ type: 'error', text: error.message || 'Unable to upload the material.' })
-    } finally {
-      setIsSubmitting(false)
-    }
+  function submitMaterialUpload(event) {
+    return handleMaterialUpload(event, {
+      materialForm,
+      token: session.token,
+      apiBaseUrl: API_BASE_URL,
+      parseResponse,
+      setMaterialForm,
+      setIsSubmitting,
+      setFeedback,
+    })
   }
 
   if (window.location.pathname === '/reset-password') {
@@ -850,7 +581,7 @@ function App() {
                 <DashboardHome user={session.user} role={role} onNavigate={navigateTo} />
               )}
               {activePage === 'notifications' && <NotificationCenter token={session.token} />}
-              {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} />}
+              {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} />}
               {activePage === 'questions' && canManageQuizzes && (
                 <QuestionBank token={session.token} user={session.user} />
               )}
@@ -869,49 +600,12 @@ function App() {
                 <MyQuizzes token={session.token} onCreateQuiz={() => navigateTo('create-quiz')} />
               )}
               {activePage === 'upload' && isInstructor && (
-                <section className="upload-page" aria-labelledby="upload-title">
-                  <div className="page-heading">
-                    <p className="eyebrow">Study resources</p>
-                    <h1 id="upload-title">Upload study material</h1>
-                    <p>Add a document and organize it for students.</p>
-                  </div>
-                  <form className="upload-panel" onSubmit={handleMaterialUpload} noValidate>
-                    <div className="field upload-file-field">
-                      <label htmlFor="material-file">Document</label>
-                      <input
-                        id="material-file"
-                        type="file"
-                        accept=".pdf,.docx,.ppt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint"
-                        onChange={(event) => setMaterialForm((current) => ({
-                          ...current, file: event.target.files[0],
-                        }))}
-                      />
-                      <p className="field-help">PDF, DOCX, and PPT files are supported.</p>
-                    </div>
-                    <div className="upload-metadata-grid">
-                      {['course', 'subject', 'topic'].map((field) => (
-                        <div className="field" key={field}>
-                          <label htmlFor={`material-${field}`}>
-                            {field[0].toUpperCase() + field.slice(1)}
-                          </label>
-                          <input
-                            id={`material-${field}`}
-                            type="text"
-                            value={materialForm[field]}
-                            onChange={(event) => setMaterialForm((current) => ({
-                              ...current, [field]: event.target.value,
-                            }))}
-                            maxLength={100}
-                            required
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <button type="submit" className="upload-submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Uploading...' : 'Upload material'}
-                    </button>
-                  </form>
-                </section>
+                <MaterialUpload
+                  materialForm={materialForm}
+                  setMaterialForm={setMaterialForm}
+                  isSubmitting={isSubmitting}
+                  onSubmit={submitMaterialUpload}
+                />
               )}
             </div>
           </main>

@@ -94,7 +94,7 @@ describe("TC-QB-02: questions can be tagged", () => {
 
   test("tags can be sent as comma-separated text, or left out", async () => {
     const fromText = await addQuestion(question({ tags: "tcp, reliability; exam" }));
-    const none = await addQuestion(question());
+    const none = await addQuestion(question({ allowDuplicate: true }));
 
     assert.deepEqual(fromText.body.question.tags, ["tcp", "reliability", "exam"]);
     assert.deepEqual(none.body.question.tags, []);

@@ -216,8 +216,9 @@ describe("TC-QB-01: add a question", () => {
 describe("TC-QB-01: retrieve questions by metadata", () => {
   test("filters by subject, topic, difficulty, and type", async () => {
     await createQuestion();
-    await createQuestion(mcqQuestion({ topic: "Network Layer", difficulty: "hard" }));
-    await createQuestion(mcqQuestion({ subject: "Operating Systems", topic: "Scheduling" }));
+    // Same text on purpose, so the duplicate warning (CSQP-F-033) is overridden
+    await createQuestion(mcqQuestion({ topic: "Network Layer", difficulty: "hard", allowDuplicate: true }));
+    await createQuestion(mcqQuestion({ subject: "Operating Systems", topic: "Scheduling", allowDuplicate: true }));
 
     const bySubject = await listQuestions({ subject: "computer networks" });
     const byTopicAndDifficulty = await listQuestions({

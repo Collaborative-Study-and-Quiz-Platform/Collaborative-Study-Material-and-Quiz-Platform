@@ -61,7 +61,8 @@ export function difficultyLabel(difficulty) {
 
 // Calls the backend with the user's JWT and turns error responses into
 // errors that carry the HTTP status and any field errors
-export async function apiRequest(path, { token, method = 'GET', body } = {}, canRefresh = true) {
+// With responseType 'file' it resolves to { blob, filename } instead of JSON
+export async function apiRequest(path, { token, method = 'GET', body, responseType } = {}, canRefresh = true) {
   let response
   const headers = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -108,7 +109,14 @@ export async function apiRequest(path, { token, method = 'GET', body } = {}, can
       token: refreshed.accessToken,
       method,
       body,
+      responseType,
     }, false)
+  }
+
+  if (responseType === 'file' && response.ok) {
+    const disposition = response.headers.get('Content-Disposition') || ''
+    const filename = /filename="([^"]+)"/.exec(disposition)?.[1] || 'download'
+    return { blob: await response.blob(), filename }
   }
 
   const data = await response.json().catch(() => ({}))

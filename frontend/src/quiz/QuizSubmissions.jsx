@@ -169,6 +169,28 @@ export default function QuizSubmissions({ token, quiz, onBack }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [grading, setGrading] = useState(null)
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Downloads every attempt as CSV (CSQP-F-026)
+  async function downloadCsv() {
+    setIsExporting(true)
+    setError('')
+    try {
+      const { blob, filename } = await apiRequest(`/api/quizzes/${quiz._id}/submissions/export`, { token, responseType: 'file' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to export results.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const load = useCallback(async () => {
     setError('')
@@ -199,7 +221,13 @@ export default function QuizSubmissions({ token, quiz, onBack }) {
           <h1 id="submissions-title">{quiz.title}</h1>
           <p>Review attempts and grade short answers. Marks are added to each student’s score.</p>
         </div>
-        <button type="button" className="secondary-button quiz-auto-button" onClick={onBack}>Back to my quizzes</button>
+        <div className="quiz-actions">
+          <button type="button" className="quiz-primary-button" onClick={downloadCsv}
+            disabled={isExporting || !data || data.count === 0}>
+            {isExporting ? 'Preparing...' : 'Download CSV'}
+          </button>
+          <button type="button" className="secondary-button quiz-auto-button" onClick={onBack}>Back to my quizzes</button>
+        </div>
       </div>
 
       {error && <p className="feedback error" role="alert">{error}</p>}

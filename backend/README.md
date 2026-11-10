@@ -363,3 +363,18 @@ upserting so the index is ready. No startup or production-data migration is need
 Run `npm test` for the full isolated MongoMemoryServer suite, or
 `node --test test/material-bookmark.test.js` for bookmark coverage. The existing
 material-file suite covers preview/download authorization and completion counts.
+## Export Quiz Results
+
+`GET /api/quizzes/:quizId/submissions/export` downloads every attempt at a quiz as a CSV file (CSQP-F-026), for the Instructor who created the quiz or an Admin; others get HTTP `403`. The file is named after the quiz and the date, for example `transport-layer-quiz-results-2026-11-10.csv`.
+
+The first row holds the column names and each further row is one student attempt, oldest first: `Student name`, `Student email`, `Status`, `Started at`, `Submitted at` (ISO timestamps), `Score`, `Max score`, `Percentage`, `Passed` (`Yes`, `No`, or `Pending` while short answers wait for grading), `Grading status`, `Pending marks`, and the marks for each question (`Q1 marks (out of 2)`, and so on). Attempts still in progress have an empty score, and attempts whose time ran out are auto-submitted before export.
+
+Values containing commas, quotes, or line breaks are quoted, and text starting with `=`, `+`, `-`, or `@` is prefixed with `'` so spreadsheet apps do not run it as a formula. The file starts with a UTF-8 byte order mark so Excel shows names correctly.
+
+## Duplicate Question Detection
+
+Adding a question that is near-identical to one already in the bank returns a duplicate warning before anything is saved (CSQP-F-033). Question texts are compared after lower-casing and removing punctuation, accents, and extra spaces, using a basic string-similarity score (the Sorensen-Dice coefficient over pairs of characters). A score of 85% or more counts as a likely duplicate. Questions by every Instructor are checked, since the bank is shared; deleted questions are not.
+
+`POST /api/questions` and `PUT /api/questions/:id` (when the text changes) then return HTTP `409` with `code: "DUPLICATE_QUESTION"` and up to five `duplicates`, most similar first, each with its `_id`, `text`, `subject`, `topic`, and `similarity` percentage. To save anyway, send the same request again with `"allowDuplicate": true`.
+
+`POST /api/questions/check-duplicates` with `{ "text": "...", "excludeId": "<optional question id>" }` runs the same check without saving and returns `hasDuplicates` and `duplicates`. The quiz builder uses it before adding a newly written question, and offers to use the existing bank question instead.

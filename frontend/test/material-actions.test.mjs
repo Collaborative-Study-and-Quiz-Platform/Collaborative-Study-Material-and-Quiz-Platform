@@ -52,3 +52,12 @@ test('one shared library preserves Student heading and shows instructor My Uploa
     for (const field of ['course', 'subject', 'topic']) assert.match(markup, new RegExp(`material-filter-${field}`))
   }
 })
+
+test('optional Comments control preserves the MaterialActions API and exposes panel state', () => {
+  const markup = render(MaterialActions, { material, canDownload: true, onComments() {}, commentsOpen: true, commentsPanelId: 'comments-panel' })
+  assert.match(markup, /aria-label="Comments on notes.pdf"/)
+  assert.match(markup, /aria-expanded="true"/)
+  assert.match(markup, /aria-controls="comments-panel"/)
+  assert.match(markup, /aria-label="View notes.pdf"/)
+  assert.match(markup, /aria-label="Download notes.pdf"/)
+})

@@ -1,12 +1,10 @@
 const fs = require("node:fs/promises");
 const { constants } = require("node:fs");
 const path = require("node:path");
+const { materialPath } = require("./materialStorage");
 const mongoose = require("mongoose");
 const Material = require("../../models/Material");
 
-const uploadDirectory = path.resolve(
-  process.env.MATERIAL_UPLOAD_DIR || path.join(__dirname, "../../../uploads/materials")
-);
 const contentTypes = {
   pdf: "application/pdf",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -19,17 +17,17 @@ async function serveMaterial(req, res, download) {
   }
   let handle;
   try {
-    const query = { _id: req.params.id };
+    const query = { _id: req.params.id, deletedAt: null };
     if (req.user.role === "instructor") query.uploadedBy = req.user.id;
     const material = await Material.findOne(query);
     if (!material) return res.status(404).json({ status: "error", message: "Material not found" });
     // Derive access from a single stored basename, never a client path or storageLocation.
     const filename = material.storedFilename;
-    if (!filename || filename !== path.basename(filename) || /[\\/\x00]/.test(filename)
+    if (!filename || filename === "." || filename === ".." || filename !== path.basename(filename) || /[\\/\x00]/.test(filename)
       || !Object.hasOwn(contentTypes, material.fileType)) {
       return res.status(404).json({ status: "error", message: "Material file unavailable" });
     }
-    handle = await fs.open(path.join(uploadDirectory, filename), constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await fs.open(materialPath(filename), constants.O_RDONLY | constants.O_NOFOLLOW);
     const stat = await handle.stat();
     if (!stat.isFile() || stat.size === 0) {
       await handle.close();

@@ -61,7 +61,7 @@ export function Preview({ material, token, apiBaseUrl, onClose, onDownload, down
   )
 }
 
-export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload, bookmarks }) {
+export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload, bookmarks, onManage }) {
   const bookmarked = bookmarks?.materials.some((item) => item._id === material._id) ?? false
   const bookmarkPending = bookmarks?.pending.includes(material._id) ?? false
   const [preview, setPreview] = useState(false)
@@ -125,6 +125,16 @@ export default function MaterialActions({ material, token, apiBaseUrl, onDownloa
             <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
           </svg>
         </button>}
+        {onManage && <>
+          <button type="button" className="secondary-button material-icon-button" aria-label={`Edit ${material.originalFilename}`}
+            title="Edit" onClick={() => onManage('edit', material)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14v6Z" /></svg>
+          </button>
+          <button type="button" className="secondary-button material-icon-button" aria-label={`Delete ${material.originalFilename}`}
+            title="Delete" onClick={() => onManage('delete', material)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7" /></svg>
+          </button>
+        </>}
         {canDownload && bookmarks && <button type="button"
           className="secondary-button material-icon-button material-bookmark-button"
           aria-label={`Bookmark ${material.originalFilename}`}

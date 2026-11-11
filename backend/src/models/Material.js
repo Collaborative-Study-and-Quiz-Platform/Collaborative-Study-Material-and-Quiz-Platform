@@ -26,6 +26,7 @@ const materialSchema = new mongoose.Schema(
       required: true,
       min: 1
     },
+    deletedAt: { type: Date, default: null },
     downloadCount: { type: Number, default: 0, min: 0 },
     tags: {
       course: { type: String, required: true, maxlength: 100, trim: true },
@@ -49,6 +50,7 @@ materialSchema.set("toJSON", {
   transform: (document, returnedMaterial) => {
     delete returnedMaterial.storageLocation;
     delete returnedMaterial.__v;
+    delete returnedMaterial.deletedAt;
   }
 });
 

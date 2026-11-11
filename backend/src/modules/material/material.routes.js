@@ -6,6 +6,7 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { updateMaterial, deleteMaterial } = require("./materialManagement.controller");
 const { listBookmarks, saveBookmark, removeBookmark } = require("./bookmark.controller");
 
 const router = express.Router();
@@ -53,6 +54,8 @@ router.get(
   listMaterials
 );
 
+router.patch("/:id", authenticateToken, authorizeRoles("instructor"), updateMaterial);
+router.delete("/:id", authenticateToken, authorizeRoles("instructor"), deleteMaterial);
 router.get("/bookmarks", authenticateToken, authorizeRoles("student"), listBookmarks);
 router.put("/:id/bookmark", authenticateToken, authorizeRoles("student"), saveBookmark);
 router.delete("/:id/bookmark", authenticateToken, authorizeRoles("student"), removeBookmark);

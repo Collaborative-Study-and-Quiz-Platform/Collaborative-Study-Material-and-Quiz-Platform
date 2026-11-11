@@ -230,14 +230,13 @@ function FeatureIcon({ name }) {
   )
 }
 
-function DashboardHome({ user, role, onNavigate }) {
+export function DashboardHome({ user, role, onNavigate }) {
   const isStudent = role === 'student'
   const features = isStudent
     ? [
       { title: 'Study Materials', description: 'Browse and search shared course resources.', icon: 'materials', page: 'browse' },
       { title: 'Quizzes', description: 'Take timed quizzes and review your results.', icon: 'quiz', page: 'take-quizzes' },
-      { title: 'Saved Materials', description: 'Keep useful study resources together.', icon: 'saved', comingSoon: true },
-      { title: 'View / Download Materials', description: 'Open or save documents for offline study.', icon: 'download', comingSoon: true },
+      { title: 'My Bookmarks', description: 'Keep useful study resources together.', icon: 'saved', page: 'bookmarks' },
       { title: 'Learning Analytics', description: 'See your score trend and topic strengths on charts.', icon: 'analytics', page: 'analytics' },
     ]
     : [
@@ -246,8 +245,6 @@ function DashboardHome({ user, role, onNavigate }) {
       { title: 'Question Bank', description: 'Add, edit, and reuse questions by subject, topic, and difficulty.', icon: 'questions', page: 'questions' },
       { title: 'Create Quiz', description: 'Build a timed quiz from bank questions or new ones.', icon: 'quiz', page: 'create-quiz' },
       { title: 'Class Analytics', description: 'See how a class scored, with charts for each question.', icon: 'analytics', page: 'analytics' },
-      { title: 'Manage My Materials', description: 'Review and organize materials you have uploaded.', icon: 'manage', comingSoon: true },
-      { title: 'Material Analytics', description: 'Explore engagement with your shared resources.', icon: 'analytics', comingSoon: true },
     ]
 
   return (
@@ -607,7 +604,7 @@ function App() {
               {activePage === 'analytics' && (isStudent || isInstructor) && (
                 <AnalyticsDashboard role={role} individualReport={SEED_INDIVIDUAL_REPORT} classReport={SEED_CLASS_REPORT} sample />
               )}
-              {(activePage === 'browse' || (activePage === 'bookmarks' && isStudent)) && (isStudent || isInstructor) && <MaterialLibrary key={`${session.user.id || session.user._id}-${activePage}`} token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} role={role} bookmarks={isStudent ? bookmarks : undefined} bookmarksOnly={activePage === 'bookmarks'} />}
+              {(activePage === 'browse' || (activePage === 'bookmarks' && isStudent)) && (isStudent || isInstructor) && <MaterialLibrary key={`${session.user.id || session.user._id}-${session.token}-${activePage}`} token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} role={role} bookmarks={isStudent ? bookmarks : undefined} bookmarksOnly={activePage === 'bookmarks'} />}
               {activePage === 'questions' && canManageQuizzes && (
                 <QuestionBank token={session.token} user={session.user} />
               )}

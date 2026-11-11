@@ -11,7 +11,12 @@ export default function MaterialRating({ material, token, apiBaseUrl, parseRespo
   const summary = isValidSummary(material.ratingSummary) ? material.ratingSummary : null
   const panelId = `material-rating-${material._id}`
   const [open, setOpen] = useState(false)
-  const [selected, setSelected] = useState(summary?.myRating || 0)
+  const vote = summary?.myRating || 0
+  const [selection, setSelection] = useState({ value: vote, vote })
+  // Record each confirmed vote transition so returning to an older vote cannot revive a draft.
+  if (summary && selection.vote !== vote) setSelection({ value: vote, vote })
+  const selected = selection.value
+  const setSelected = (value) => setSelection({ value, vote })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [unavailable, setUnavailable] = useState(false)
@@ -46,7 +51,8 @@ export default function MaterialRating({ material, token, apiBaseUrl, parseRespo
     }
     const next = { averageRating: data.averageRating, ratingCount: data.ratingCount, myRating: data.myRating }
     onSummaryChange(next)
-    setSelected(next.myRating || 0)
+    // Successful writes consume the draft; unchanged reads leave it intact.
+    if (requireRating) setSelection({ value: next.myRating || 0, vote: next.myRating || 0 })
   }
 
   async function refresh() {

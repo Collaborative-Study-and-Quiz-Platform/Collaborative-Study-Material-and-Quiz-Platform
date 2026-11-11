@@ -1,9 +1,10 @@
 import MaterialActions from './MaterialActions'
-import MaterialRating from './MaterialRating'
-import MaterialComments from './MaterialComments'
 import MaterialManagementDialog from './MaterialManagementDialog'
-import { updateDownloadCount, withDownloadCount } from './materialCounts'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { updateDownloadCount, withDownloadCount } from './materialCounts'
+import MaterialComments from './MaterialComments'
+import MaterialRating from './MaterialRating'
+import { createRatingState } from './ratingState'
 
 function groupMaterials(materials) {
   const courses = new Map()
@@ -44,7 +45,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse, bookmarks, onManage, canRate, onRated }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, onManage, bookmarks, parseResponse, canRate, onRated }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const panelId = `material-comments-${material._id}`
   const fileSize = formatFileSize(material.fileSize)
@@ -68,7 +69,7 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
       </div>
       {canAccessFiles && <MaterialRating key={`${material._id}-${token}`} material={material} token={token}
         apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} canRate={canRate} onSummaryChange={(summary) => onRated(material._id, summary)} />}
-      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} onManage={onManage} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
+      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} onManage={onManage} bookmarks={bookmarks} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
       {canAccessFiles && <div id={panelId} className="material-comments-slot" hidden={!commentsOpen}>
         {commentsOpen && <MaterialComments key={`${material._id}-${token}`} materialId={material._id}
           token={token} apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} panelId={`${panelId}-panel`} />}
@@ -79,8 +80,8 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
 
 export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role, bookmarks, bookmarksOnly = false }) {
   const [browseMaterials, setMaterials] = useState([])
-  const [loadedToken, setLoadedToken] = useState(null)
   const [browseCount, setResultCount] = useState(0)
+  const [loadedToken, setLoadedToken] = useState(null)
   const [filterOptions, setFilterOptions] = useState({
     courses: [], subjects: [], topics: [],
   })
@@ -97,15 +98,20 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   const loadingRequest = useRef(null)
   const sequence = useRef(0)
   const cancelLoading = useCallback(() => { ++sequence.current; loadingRequest.current?.abort() }, [])
-
+  const localRatings = useRef(createRatingState())
+  const beginRatingRead = bookmarks?.beginRatingRead || localRatings.current.begin
+  const mergeRatingRead = bookmarks?.mergeRatingRead
   const bookmarkCounts = new Map(bookmarks?.materials.map((material) => [material._id, material.downloadCount]))
   const materials = bookmarksOnly ? bookmarks.materials : browseMaterials.map((material) =>
     withDownloadCount(material, bookmarkCounts.get(material._id)))
+  const visibleMaterials = materials.map((material) => bookmarks?.ratingSummaries && Object.hasOwn(bookmarks.ratingSummaries, material._id)
+    ? { ...material, ratingSummary: bookmarks.ratingSummaries[material._id] } : material)
   const resultCount = bookmarksOnly ? materials.length : browseCount
   const isLoading = bookmarksOnly ? bookmarks.loading && !bookmarks.hasLoaded : browseLoading
   const error = bookmarksOnly ? (!bookmarks.hasLoaded ? bookmarks.error : '') : browseError
 
   const loadMaterials = useCallback(async (nextFilters, includeOptions = false, background = false) => {
+    const ratingRead = beginRatingRead()
     const version = ++sequence.current
     loadingRequest.current?.abort()
     const controller = new AbortController()
@@ -127,14 +133,14 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
         includeOptions && params.size ? read('') : Promise.resolve(null),
       ])
       if (version !== sequence.current) return
-      const nextMaterials = Array.isArray(data.materials) ? data.materials : []
+      const nextMaterials = (mergeRatingRead || localRatings.current.merge)(Array.isArray(data.materials) ? data.materials : [], ratingRead)
       setHasLoaded(true)
-      setLoadedToken(token)
       setMaterials((current) => {
         const counts = new Map(current.map((material) => [material._id, material.downloadCount ?? 0]))
         return nextMaterials.map((material) => ({ ...material,
           downloadCount: Math.max(material.downloadCount ?? 0, counts.get(material._id) ?? 0) }))
       })
+      setLoadedToken(token)
       setResultCount(Number.isFinite(data.count) ? data.count : nextMaterials.length)
       if (includeOptions) {
         const optionMaterials = all?.materials || nextMaterials
@@ -149,7 +155,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
     } finally {
       if (version === sequence.current) { setIsLoading(false); setIsRefreshing(false) }
     }
-  }, [token, apiBaseUrl, parseResponse])
+  }, [token, apiBaseUrl, parseResponse, beginRatingRead, mergeRatingRead])
 
   useEffect(() => {
     if (bookmarksOnly) return
@@ -158,7 +164,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       0,
     )
     return () => { window.clearTimeout(timer); cancelLoading() }
-  }, [loadMaterials, bookmarksOnly, cancelLoading])
+  }, [loadMaterials, cancelLoading, bookmarksOnly])
 
   function updateFilter(event) {
     const { name, value } = event.target
@@ -198,13 +204,14 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   }
 
   function updateRating(id, ratingSummary) {
+    localRatings.current.confirm(id, ratingSummary)
+    bookmarks?.rated?.(id, ratingSummary)
     setMaterials((current) => current.map((material) => material._id === id ? { ...material, ratingSummary } : material))
   }
 
-  const courseGroups = groupMaterials(materials)
+  const courseGroups = groupMaterials(visibleMaterials)
   // Summaries contain the student's own vote; never render a previous session's data.
-  // The bookmarks view gets its data from the bookmarks list, not the library loader
-  const isCurrentSession = bookmarksOnly || loadedToken === token
+  const isCurrentSession = bookmarksOnly ? bookmarks.hasLoaded : loadedToken === token
 
   return (
     <section className="library" aria-labelledby="library-title">
@@ -331,7 +338,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} bookmarks={bookmarks} canRate={role === 'student'} onRated={updateRating} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
+                                canRate={role === 'student'} onRated={updateRating} parseResponse={parseResponse} token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} bookmarks={bookmarks} onDownloaded={refreshDownloadCount} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
                             ))}
                           </div>
                         </details>

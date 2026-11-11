@@ -1,4 +1,5 @@
 import MaterialActions from './MaterialActions'
+import MaterialComments from './MaterialComments'
 import MaterialManagementDialog from './MaterialManagementDialog'
 import { updateDownloadCount, withDownloadCount } from './materialCounts'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -42,7 +43,9 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, bookmarks, onManage }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse, bookmarks, onManage }) {
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const panelId = `material-comments-${material._id}`
   const fileSize = formatFileSize(material.fileSize)
   const uploadedDate = material.createdAt
     ? new Date(material.createdAt).toLocaleDateString()
@@ -62,7 +65,11 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
-      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} onManage={onManage} />}
+      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} onManage={onManage} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
+      {canAccessFiles && <div id={panelId} className="material-comments-slot" hidden={!commentsOpen}>
+        {commentsOpen && <MaterialComments key={`${material._id}-${token}`} materialId={material._id}
+          token={token} apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} panelId={`${panelId}-panel`} />}
+      </div>}
     </article>
   )
 }
@@ -312,7 +319,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} bookmarks={bookmarks} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} bookmarks={bookmarks} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
                             ))}
                           </div>
                         </details>

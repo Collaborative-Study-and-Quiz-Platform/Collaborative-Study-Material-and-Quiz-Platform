@@ -61,7 +61,7 @@ export function Preview({ material, token, apiBaseUrl, onClose, onDownload, down
   )
 }
 
-export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload, bookmarks, onManage }) {
+export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload, bookmarks, onManage, onComments, commentsOpen = false, commentsPanelId }) {
   const bookmarked = bookmarks?.materials.some((item) => item._id === material._id) ?? false
   const bookmarkPending = bookmarks?.pending.includes(material._id) ?? false
   const [preview, setPreview] = useState(false)
@@ -123,6 +123,13 @@ export default function MaterialActions({ material, token, apiBaseUrl, onDownloa
           aria-label={`Download ${material.originalFilename}`} title="Download" onClick={download} disabled={downloading}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
             <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+          </svg>
+        </button>}
+        {onComments && <button type="button" className="secondary-button material-icon-button"
+          aria-label={`Comments on ${material.originalFilename}`} title="Comments" onClick={onComments}
+          aria-expanded={commentsOpen} aria-controls={commentsPanelId}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M3 3h18v14H9l-6 4V3Z" /><path d="M7 7h10M7 12h7" />
           </svg>
         </button>}
         {onManage && <>

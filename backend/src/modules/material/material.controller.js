@@ -4,6 +4,8 @@ const path = require("node:path");
 const Material = require("../../models/Material");
 const { ratingSummaries, emptySummary } = require("./materialRating.service");
 const { containsUnsafeContent } = require("../../middleware/sanitizeJsonBody");
+const { validateTags } = require("./material.validation");
+const { UPLOAD_DIRECTORY } = require("./materialStorage");
 
 const configuredMaxFileSize = Number.parseInt(
   process.env.MATERIAL_MAX_FILE_SIZE_BYTES || "",
@@ -12,9 +14,6 @@ const configuredMaxFileSize = Number.parseInt(
 const MAX_FILE_SIZE = Number.isSafeInteger(configuredMaxFileSize) && configuredMaxFileSize > 0
   ? configuredMaxFileSize
   : 10 * 1024 * 1024;
-const UPLOAD_DIRECTORY = path.resolve(
-  process.env.MATERIAL_UPLOAD_DIR || path.join(__dirname, "../../../uploads/materials")
-);
 const SUPPORTED_TYPES = {
   pdf: { mimeTypes: new Set(["application/pdf"]) },
   docx: {
@@ -49,26 +48,6 @@ function hasValidSignature(fileType, buffer) {
   }
 
   return buffer.subarray(0, 8).toString("hex") === "d0cf11e0a1b11ae1";
-}
-
-function validateTags(body) {
-  const errors = {};
-  const tags = {};
-
-  ["course", "subject", "topic"].forEach((field) => {
-    const value = typeof body[field] === "string" ? body[field].trim() : "";
-    if (!value) {
-      errors[field] = `${field[0].toUpperCase()}${field.slice(1)} is required`;
-    } else if (containsUnsafeContent(value)) {
-      errors[field] = `${field[0].toUpperCase()}${field.slice(1)} contains unsafe content`;
-    } else if (value.length > 100) {
-      errors[field] = `${field[0].toUpperCase()}${field.slice(1)} must be 100 characters or fewer`;
-    } else {
-      tags[field] = value;
-    }
-  });
-
-  return { tags, errors };
 }
 
 function escapeRegex(value) {

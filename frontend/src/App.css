@@ -333,3 +333,6 @@ input:focus-visible,
   .material-preview { padding: 16px; }
   .material-preview-heading { align-items: flex-start; flex-direction: column; }
 }
+
+.material-bookmark-button[aria-pressed="true"] { color: #7146bd; }
+.material-bookmark-button:focus-visible { outline: 3px solid #7146bd; outline-offset: 3px; }

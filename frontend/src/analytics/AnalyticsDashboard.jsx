@@ -1,4 +1,5 @@
 import './analytics.css'
+import { exportReport } from './exportReport'
 import { ColumnChart, HorizontalBarChart, LineChart } from './Charts'
 import {
   TONE_LABELS,
@@ -160,6 +161,8 @@ function InstructorDashboard({ report }) {
 // sample: true marks the numbers as example data.
 export default function AnalyticsDashboard({ role, individualReport, classReport, sample = false }) {
   const isStudent = role === 'student'
+  const report = isStudent ? individualReport : classReport
+  const canExport = (report?.summary?.attemptsCompleted ?? 0) > 0
 
   return (
     <section className="analytics-dashboard" aria-labelledby="analytics-title">
@@ -171,6 +174,16 @@ export default function AnalyticsDashboard({ role, individualReport, classReport
           : `${classReport?.quiz?.title || 'Quiz'}: how the class did overall and question by question.`}
         </p>
       </div>
+      {canExport && (
+        <div className="analytics-actions">
+          <button type="button" className="analytics-export" onClick={() => exportReport('csv', role, report, { sample })}>
+            Download CSV
+          </button>
+          <button type="button" className="analytics-export" onClick={() => exportReport('pdf', role, report, { sample })}>
+            Download PDF
+          </button>
+        </div>
+      )}
       {sample && (
         <p className="analytics-note analytics-sample" role="note">
           Showing sample data. Live analytics will replace it once this page is connected to the analytics service.

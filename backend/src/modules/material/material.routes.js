@@ -6,6 +6,8 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { listBookmarks, saveBookmark, removeBookmark } = require("./bookmark.controller");
+
 const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -50,6 +52,10 @@ router.get(
   authorizeRoles("student", "instructor"),
   listMaterials
 );
+
+router.get("/bookmarks", authenticateToken, authorizeRoles("student"), listBookmarks);
+router.put("/:id/bookmark", authenticateToken, authorizeRoles("student"), saveBookmark);
+router.delete("/:id/bookmark", authenticateToken, authorizeRoles("student"), removeBookmark);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

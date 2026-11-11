@@ -6,6 +6,7 @@ import CreateQuiz from './quiz/CreateQuiz'
 import MyQuizzes from './quiz/MyQuizzes'
 import StudentQuizzes from './quiz/StudentQuizzes'
 import MaterialLibrary from './materials/MaterialLibrary'
+import useBookmarks from './materials/useBookmarks'
 import MaterialUpload from './materials/MaterialUpload'
 import handleMaterialUpload from './materials/handleMaterialUpload'
 import NotificationCenter from './notifications/NotificationCenter'
@@ -293,6 +294,9 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [session, setSession] = useState(null)
   const [activePage, setActivePage] = useState('dashboard')
+  const bookmarks = useBookmarks({ token: session?.token,
+    studentId: session?.user.role === 'student' ? session.user.id || session.user._id : null,
+    apiBaseUrl: API_BASE_URL, parseResponse, page: activePage })
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false)
   const [resetToken, setResetToken] = useState(
     () => new URLSearchParams(window.location.search).get('token') || '',
@@ -477,6 +481,7 @@ function App() {
     const pageLabels = {
       dashboard: 'Dashboard',
       browse: isInstructor ? 'My Uploads' : 'Browse materials',
+      bookmarks: 'My Bookmarks',
       upload: 'Upload study material',
       questions: 'Question bank',
       'create-quiz': 'Create quiz',
@@ -520,6 +525,13 @@ function App() {
                 aria-current={activePage === 'browse' ? 'page' : undefined}
                 onClick={() => navigateTo('browse')} title={isInstructor ? 'My Uploads' : 'Browse materials'}>
                 <span className="nav-icon" aria-hidden="true">▤</span><span className="nav-label">{isInstructor ? 'My Uploads' : 'Browse materials'}</span>
+              </button>
+            )}
+            {isStudent && (
+              <button type="button" className={activePage === 'bookmarks' ? 'active' : ''}
+                aria-current={activePage === 'bookmarks' ? 'page' : undefined}
+                onClick={() => navigateTo('bookmarks')} title="My Bookmarks">
+                <span className="nav-icon" aria-hidden="true">▱</span><span className="nav-label">My Bookmarks</span>
               </button>
             )}
             {isInstructor && (
@@ -581,7 +593,7 @@ function App() {
                 <DashboardHome user={session.user} role={role} onNavigate={navigateTo} />
               )}
               {activePage === 'notifications' && <NotificationCenter token={session.token} />}
-              {activePage === 'browse' && (isStudent || isInstructor) && <MaterialLibrary token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} role={role} />}
+              {(activePage === 'browse' || (activePage === 'bookmarks' && isStudent)) && (isStudent || isInstructor) && <MaterialLibrary key={`${session.user.id || session.user._id}-${activePage}`} token={session.token} apiBaseUrl={API_BASE_URL} parseResponse={parseResponse} role={role} bookmarks={isStudent ? bookmarks : undefined} bookmarksOnly={activePage === 'bookmarks'} />}
               {activePage === 'questions' && canManageQuizzes && (
                 <QuestionBank token={session.token} user={session.user} />
               )}

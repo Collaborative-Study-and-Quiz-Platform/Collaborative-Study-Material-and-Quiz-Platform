@@ -1,4 +1,5 @@
 import MaterialActions from './MaterialActions'
+import MaterialRating from './MaterialRating'
 import MaterialComments from './MaterialComments'
 import MaterialManagementDialog from './MaterialManagementDialog'
 import { updateDownloadCount, withDownloadCount } from './materialCounts'
@@ -43,7 +44,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse, bookmarks, onManage }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse, bookmarks, onManage, canRate, onRated }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const panelId = `material-comments-${material._id}`
   const fileSize = formatFileSize(material.fileSize)
@@ -65,6 +66,8 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
+      {canAccessFiles && <MaterialRating key={`${material._id}-${token}`} material={material} token={token}
+        apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} canRate={canRate} onSummaryChange={(summary) => onRated(material._id, summary)} />}
       {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} onManage={onManage} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
       {canAccessFiles && <div id={panelId} className="material-comments-slot" hidden={!commentsOpen}>
         {commentsOpen && <MaterialComments key={`${material._id}-${token}`} materialId={material._id}
@@ -76,6 +79,7 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
 
 export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role, bookmarks, bookmarksOnly = false }) {
   const [browseMaterials, setMaterials] = useState([])
+  const [loadedToken, setLoadedToken] = useState(null)
   const [browseCount, setResultCount] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
     courses: [], subjects: [], topics: [],
@@ -125,6 +129,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       if (version !== sequence.current) return
       const nextMaterials = Array.isArray(data.materials) ? data.materials : []
       setHasLoaded(true)
+      setLoadedToken(token)
       setMaterials((current) => {
         const counts = new Map(current.map((material) => [material._id, material.downloadCount ?? 0]))
         return nextMaterials.map((material) => ({ ...material,
@@ -192,7 +197,14 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
     }
   }
 
+  function updateRating(id, ratingSummary) {
+    setMaterials((current) => current.map((material) => material._id === id ? { ...material, ratingSummary } : material))
+  }
+
   const courseGroups = groupMaterials(materials)
+  // Summaries contain the student's own vote; never render a previous session's data.
+  // The bookmarks view gets its data from the bookmarks list, not the library loader
+  const isCurrentSession = bookmarksOnly || loadedToken === token
 
   return (
     <section className="library" aria-labelledby="library-title">
@@ -273,28 +285,28 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       {bookmarks && (!bookmarks.ready || bookmarks.error) && <button type="button" className="secondary-button" onClick={bookmarks.reload} disabled={bookmarks.loading}>Retry bookmarks</button>}
       {error && <p className="feedback error" role="alert">{error}</p>}
       <p className="results-count" role="status" aria-live="polite">
-        {isLoading
+        {isLoading || (!isCurrentSession && !error)
           ? 'Loading materials...'
           : error && !hasLoaded
             ? 'Materials unavailable.'
             : `${resultCount} material${resultCount === 1 ? '' : 's'} in ${courseGroups.length} course${courseGroups.length === 1 ? '' : 's'}`}
       </p>
 
-      {isLoading && (
+      {(isLoading || (!isCurrentSession && !error)) && (
         <div className="explorer-state" role="status">
           <span className="loading-indicator" aria-hidden="true" />
           <p>Loading study materials…</p>
         </div>
       )}
 
-      {!isLoading && !error && resultCount === 0 && (
+      {isCurrentSession && !isLoading && !error && resultCount === 0 && (
         <div className="empty-state">
           <h2>{bookmarksOnly ? 'No bookmarks yet' : 'No materials found'}</h2>
           <p>{bookmarksOnly ? 'Bookmark materials from Browse materials to find them here.' : 'Try a different keyword or clear the filters to browse the library.'}</p>
         </div>
       )}
 
-      {!isLoading && (!error || hasLoaded) && resultCount > 0 && (
+      {isCurrentSession && !isLoading && (!error || hasLoaded) && resultCount > 0 && (
         <div className="material-explorer" aria-label="Study materials by course, subject, and topic">
           {courseGroups.map((course) => (
             <details className="explorer-course" key={course.name} open>
@@ -319,7 +331,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} bookmarks={bookmarks} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} bookmarks={bookmarks} canRate={role === 'student'} onRated={updateRating} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
                             ))}
                           </div>
                         </details>

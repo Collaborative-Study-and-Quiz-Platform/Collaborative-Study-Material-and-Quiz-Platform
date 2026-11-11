@@ -1,0 +1,19 @@
+.material-rating { display: contents; }
+.material-rating-average { margin-left: auto; align-self: center; white-space: nowrap; font-size: .8rem; color: #7146bd; }
+.material-rating-average small { color: #68627a; }
+.material-rating-toggle { color: #7146bd; }
+.material-row:has(.material-rating-panel:not([hidden])), .material-row:has(.material-rating-feedback) { flex-wrap: wrap; }
+.material-row:has(.material-rating) > .material-actions { margin-left: 0; }
+.material-rating-panel, .material-rating-feedback { order: 1; flex: 0 0 100%; min-width: 0; }
+.material-rating-panel { padding: 12px 0 0; border-top: 1px solid #efedf5; }
+.material-rating-panel form { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.material-rating-panel fieldset { border: 0; padding: 0; margin: 0; }
+.material-rating-panel legend { font-size: .8rem; margin-bottom: 4px; }
+.material-rating-stars { display: flex; gap: 5px; }
+.material-rating-stars label { position: relative; cursor: pointer; }
+.material-rating-stars input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.material-rating-stars span { display: block; font-size: 1.4rem; color: #bcb5cc; border-radius: 3px; }
+.material-rating-stars span.selected { color: #7146bd; }
+.material-rating-stars input:focus-visible + span { outline: 3px solid #7146bd; outline-offset: 2px; }
+.material-rating-buttons { display: flex; gap: 8px; }
+.material-rating-buttons button { width: auto; padding: 8px 12px; font-size: .8rem; }

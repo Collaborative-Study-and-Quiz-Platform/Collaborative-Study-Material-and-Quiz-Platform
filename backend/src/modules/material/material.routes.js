@@ -6,6 +6,7 @@ const { createMaterial, listMaterials, MAX_FILE_SIZE } = require("./material.con
 
 const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
+const { getRating, putRating } = require("./materialRating.controller");
 const { createComment, listComments } = require("./materialComment.controller");
 const { createRateLimiter } = require("../../middleware/rateLimit");
 const { updateMaterial, deleteMaterial } = require("./materialManagement.controller");
@@ -22,6 +23,7 @@ const commentPostLimit = createRateLimiter({
   max: Number(process.env.MATERIAL_COMMENT_RATE_LIMIT_MAX || 10),
   message: "Too many comments. Please wait before posting again."
 });
+const ratingHeaders = (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); };
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -73,6 +75,8 @@ router.delete("/:id", authenticateToken, authorizeRoles("instructor"), deleteMat
 router.get("/bookmarks", authenticateToken, authorizeRoles("student"), listBookmarks);
 router.put("/:id/bookmark", authenticateToken, authorizeRoles("student"), saveBookmark);
 router.delete("/:id/bookmark", authenticateToken, authorizeRoles("student"), removeBookmark);
+router.get("/:id/rating", ratingHeaders, authenticateToken, authorizeRoles("student", "instructor"), getRating);
+router.put("/:id/rating", ratingHeaders, authenticateToken, authorizeRoles("student"), putRating);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

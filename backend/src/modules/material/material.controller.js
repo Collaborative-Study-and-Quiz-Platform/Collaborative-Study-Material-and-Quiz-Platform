@@ -2,6 +2,8 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const Material = require("../../models/Material");
+const { ratingSummaries, emptySummary } = require("./materialRating.service");
+const { containsUnsafeContent } = require("../../middleware/sanitizeJsonBody");
 const { validateTags } = require("./material.validation");
 const { UPLOAD_DIRECTORY } = require("./materialStorage");
 
@@ -65,6 +67,7 @@ function getQueryValue(query, field) {
 }
 
 async function listMaterials(req, res, next) {
+  res.set("Cache-Control", "private, no-store");
   const allowedQueryFields = new Set(["keyword", "course", "subject", "topic"]);
   if (Object.keys(req.query).some((field) => !allowedQueryFields.has(field))) {
     return res.status(400).json({
@@ -101,10 +104,18 @@ async function listMaterials(req, res, next) {
       .sort({ createdAt: -1, _id: -1 })
       .lean();
 
+    let summaries;
+    try {
+      summaries = await ratingSummaries(materials.map((material) => material._id), req.user);
+    } catch (error) {
+      console.error("Unable to load material rating summaries:", error.message);
+      // Optional rating data must not take the material library offline.
+    }
     return res.status(200).json({
       status: "success",
       count: materials.length,
-      materials: materials.map((material) => ({ ...material, downloadCount: material.downloadCount ?? 0 }))
+      materials: materials.map((material) => ({ ...material, downloadCount: material.downloadCount ?? 0,
+        ratingSummary: summaries ? summaries.get(String(material._id)) || emptySummary() : null }))
     });
   } catch (error) {
     return next(error);

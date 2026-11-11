@@ -57,3 +57,8 @@
   .analytics-chart { min-width: 520px; }
   .analytics-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.analytics-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.analytics-export { padding: 8px 16px; border: 1px solid #c9cef5; border-radius: 10px; color: #3f48b8; background: #fff; font: inherit; font-size: .84rem; font-weight: 650; cursor: pointer; }
+.analytics-export:hover { background: #eef0ff; }
+.analytics-export:focus-visible { outline: 3px solid rgba(89, 100, 232, .24); outline-offset: 2px; }

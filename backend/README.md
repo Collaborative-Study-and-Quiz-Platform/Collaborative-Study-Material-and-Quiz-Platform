@@ -340,6 +340,29 @@ Short-answer questions are graded by hand (CSQP-F-024). These routes need a JWT 
 
 `marks` is a number from 0 to the question's marks, in steps of 0.5, and `feedback` is optional text of up to 1000 characters. Only short-answer questions can be graded this way; invalid grades return HTTP `422`, and an attempt still in progress returns `409`. The attempt's `score`, `percentage`, `pendingMarks`, `gradingStatus`, and `passed` are recalculated from all question marks, so manual marks are added to the auto-graded score. Marks can be changed later. When the last short answer is graded the student gets a notification, and their result (`GET /api/quizzes/:quizId/attempt/result`) shows the new score, with each short answer's marks and feedback in the answer review when answers are visible.
 
+### CSQP-F-013: student bookmarks (TC-Mat-04)
+
+All bookmark endpoints require a student Bearer token. The student identity comes
+only from the JWT; request bodies and query parameters are not accepted.
+
+- `GET /api/materials/bookmarks`: `200 { status: "success", count, materials }`.
+  Newest bookmarks first; missing materials are omitted. Storage locations,
+  stored filenames and internal version fields are excluded.
+- `PUT /api/materials/:id/bookmark`: idempotent save;
+  `200 { status: "success", materialId, bookmarked: true }`.
+- `DELETE /api/materials/:id/bookmark`: idempotent removal, including stale entries;
+  `200 { status: "success", materialId, bookmarked: false }`.
+
+Errors: `400` invalid material ID/additional fields, `401` invalid authentication,
+`403` non-student, `404` missing material on save, `500` unexpected database failure.
+Responses are private and non-cacheable. The Bookmark compound unique index on
+`student, material` prevents concurrent duplicates. Existing Mongoose automatic
+model initialization is retained; save requests await `Bookmark.init()` before
+upserting so the index is ready. No startup or production-data migration is needed.
+
+Run `npm test` for the full isolated MongoMemoryServer suite, or
+`node --test test/material-bookmark.test.js` for bookmark coverage. The existing
+material-file suite covers preview/download authorization and completion counts.
 ## Export Quiz Results
 
 `GET /api/quizzes/:quizId/submissions/export` downloads every attempt at a quiz as a CSV file (CSQP-F-026), for the Instructor who created the quiz or an Admin; others get HTTP `403`. The file is named after the quiz and the date, for example `transport-layer-quiz-results-2026-11-10.csv`.

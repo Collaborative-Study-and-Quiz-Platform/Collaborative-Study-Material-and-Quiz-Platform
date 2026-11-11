@@ -1,6 +1,8 @@
 import MaterialActions from './MaterialActions'
 import MaterialComments from './MaterialComments'
-import { useCallback, useEffect, useState } from 'react'
+import MaterialManagementDialog from './MaterialManagementDialog'
+import { updateDownloadCount, withDownloadCount } from './materialCounts'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 function groupMaterials(materials) {
   const courses = new Map()
@@ -41,7 +43,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse }) {
+function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload, onDownloaded, parseResponse, bookmarks, onManage }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const panelId = `material-comments-${material._id}`
   const fileSize = formatFileSize(material.fileSize)
@@ -63,7 +65,7 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
           ].filter(Boolean).join(' · ') || 'Additional file details unavailable'}
         </p>
       </div>
-      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
+      {canAccessFiles && <MaterialActions material={material} token={token} apiBaseUrl={apiBaseUrl} canDownload={canDownload} onDownloaded={onDownloaded} bookmarks={bookmarks} onManage={onManage} onComments={() => setCommentsOpen((open) => !open)} commentsOpen={commentsOpen} commentsPanelId={panelId} />}
       {canAccessFiles && <div id={panelId} className="material-comments-slot" hidden={!commentsOpen}>
         {commentsOpen && <MaterialComments key={`${material._id}-${token}`} materialId={material._id}
           token={token} apiBaseUrl={apiBaseUrl} parseResponse={parseResponse} panelId={`${panelId}-panel`} />}
@@ -72,20 +74,41 @@ function MaterialRow({ material, token, apiBaseUrl, canAccessFiles, canDownload,
   )
 }
 
-export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role }) {
-  const [materials, setMaterials] = useState([])
-  const [resultCount, setResultCount] = useState(0)
+export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role, bookmarks, bookmarksOnly = false }) {
+  const [browseMaterials, setMaterials] = useState([])
+  const [browseCount, setResultCount] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
     courses: [], subjects: [], topics: [],
   })
   const [filters, setFilters] = useState({
     keyword: '', course: '', subject: '', topic: '',
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [browseLoading, setIsLoading] = useState(true)
+  const [browseError, setError] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  const [management, setManagement] = useState(null)
+  const [notice, setNotice] = useState('')
+  const appliedFilters = useRef({ keyword: '', course: '', subject: '', topic: '' })
+  const loadingRequest = useRef(null)
+  const sequence = useRef(0)
+  const cancelLoading = useCallback(() => { ++sequence.current; loadingRequest.current?.abort() }, [])
 
-  const loadMaterials = useCallback(async (nextFilters, includeOptions = false) => {
-    setIsLoading(true)
+  const bookmarkCounts = new Map(bookmarks?.materials.map((material) => [material._id, material.downloadCount]))
+  const materials = bookmarksOnly ? bookmarks.materials : browseMaterials.map((material) =>
+    withDownloadCount(material, bookmarkCounts.get(material._id)))
+  const resultCount = bookmarksOnly ? materials.length : browseCount
+  const isLoading = bookmarksOnly ? bookmarks.loading && !bookmarks.hasLoaded : browseLoading
+  const error = bookmarksOnly ? (!bookmarks.hasLoaded ? bookmarks.error : '') : browseError
+
+  const loadMaterials = useCallback(async (nextFilters, includeOptions = false, background = false) => {
+    const version = ++sequence.current
+    loadingRequest.current?.abort()
+    const controller = new AbortController()
+    loadingRequest.current = controller
+    appliedFilters.current = { ...nextFilters }
+    if (background) setIsRefreshing(true)
+    else setIsLoading(true)
     setError('')
     const params = new URLSearchParams()
     Object.entries(nextFilters).forEach(([key, value]) => {
@@ -93,34 +116,44 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
     })
 
     try {
-      const data = await parseResponse(await fetch(
-        `${apiBaseUrl}/api/materials?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      ))
+      const options = { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal }
+      const read = async (query) => parseResponse(await fetch(`${apiBaseUrl}/api/materials${query}`, options))
+      const [data, all] = await Promise.all([
+        read(`?${params}`),
+        includeOptions && params.size ? read('') : Promise.resolve(null),
+      ])
+      if (version !== sequence.current) return
       const nextMaterials = Array.isArray(data.materials) ? data.materials : []
-      setMaterials(nextMaterials)
+      setHasLoaded(true)
+      setMaterials((current) => {
+        const counts = new Map(current.map((material) => [material._id, material.downloadCount ?? 0]))
+        return nextMaterials.map((material) => ({ ...material,
+          downloadCount: Math.max(material.downloadCount ?? 0, counts.get(material._id) ?? 0) }))
+      })
       setResultCount(Number.isFinite(data.count) ? data.count : nextMaterials.length)
       if (includeOptions) {
+        const optionMaterials = all?.materials || nextMaterials
         setFilterOptions({
-          courses: [...new Set(nextMaterials.map((m) => m.tags?.course).filter(Boolean))].sort(),
-          subjects: [...new Set(nextMaterials.map((m) => m.tags?.subject).filter(Boolean))].sort(),
-          topics: [...new Set(nextMaterials.map((m) => m.tags?.topic).filter(Boolean))].sort(),
+          courses: [...new Set(optionMaterials.map((m) => m.tags?.course).filter(Boolean))].sort(),
+          subjects: [...new Set(optionMaterials.map((m) => m.tags?.subject).filter(Boolean))].sort(),
+          topics: [...new Set(optionMaterials.map((m) => m.tags?.topic).filter(Boolean))].sort(),
         })
       }
     } catch (requestError) {
-      setError(requestError.message || 'Unable to load study materials.')
+      if (version === sequence.current && !controller.signal.aborted) setError(requestError.message || 'Unable to load study materials.')
     } finally {
-      setIsLoading(false)
+      if (version === sequence.current) { setIsLoading(false); setIsRefreshing(false) }
     }
   }, [token, apiBaseUrl, parseResponse])
 
   useEffect(() => {
+    if (bookmarksOnly) return
     const timer = window.setTimeout(
       () => loadMaterials({ keyword: '', course: '', subject: '', topic: '' }, true),
       0,
     )
-    return () => window.clearTimeout(timer)
-  }, [loadMaterials])
+    return () => { window.clearTimeout(timer); cancelLoading() }
+  }, [loadMaterials, bookmarksOnly, cancelLoading])
 
   function updateFilter(event) {
     const { name, value } = event.target
@@ -139,9 +172,10 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
   }
 
   async function refreshDownloadCount(id) {
+    const completedCount = (materials.find((material) => material._id === id)?.downloadCount ?? 0) + 1
+    bookmarks?.downloaded(id, completedCount)
     // Update only this row; preserve filters and the mounted disclosure tree.
-    setMaterials((current) => current.map((material) => material._id === id
-      ? { ...material, downloadCount: (material.downloadCount ?? 0) + 1 } : material))
+    setMaterials((current) => updateDownloadCount(current, id, completedCount))
     try {
       // The server records completion after flushing the file response.
       await new Promise((resolve) => window.setTimeout(resolve, 150))
@@ -149,8 +183,10 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
         headers: { Authorization: `Bearer ${token}` },
       }))
       const updated = data.materials?.find((material) => material._id === id)
-      if (updated) setMaterials((current) => current.map((material) => material._id === id
-        ? { ...material, downloadCount: Math.max(material.downloadCount ?? 0, updated.downloadCount ?? 0) } : material))
+      if (updated) {
+        setMaterials((current) => updateDownloadCount(current, id, updated.downloadCount ?? 0))
+        bookmarks?.downloaded(id, updated.downloadCount ?? 0)
+      }
     } catch {
       // Keep the completed download's local count if refreshing is unavailable.
     }
@@ -163,12 +199,12 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
       <div className="library-heading">
         <div>
           <p className="eyebrow">Study resources</p>
-          <h1 id="library-title">{role === 'instructor' ? 'My Uploads' : 'Browse materials'}</h1>
-          <p>{role === 'instructor' ? 'Find and preview your uploaded study materials.' : 'Search materials shared by instructors.'}</p>
+          <h1 id="library-title" tabIndex={-1}>{bookmarksOnly ? 'My Bookmarks' : role === 'instructor' ? 'My Uploads' : 'Browse materials'}</h1>
+          <p>{bookmarksOnly ? 'Your saved study materials.' : role === 'instructor' ? 'Find and preview your uploaded study materials.' : 'Search materials shared by instructors.'}</p>
         </div>
       </div>
 
-      <form className="library-filters filter-panel" onSubmit={submitFilters}>
+      {!bookmarksOnly && <form className="library-filters filter-panel" onSubmit={submitFilters}>
         <div className="field library-search">
           <label htmlFor="material-keyword">Keyword</label>
           <input
@@ -195,7 +231,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
               onChange={updateFilter}
             >
               <option value="">All {label.toLowerCase()}s</option>
-              {options.map((option) => (
+              {[...new Set([...options, filters[name]].filter(Boolean))].sort().map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
@@ -210,13 +246,36 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
             Clear
           </button>
         </div>
-      </form>
+      </form>}
 
+      {management && management.token === token && role === 'instructor' && <MaterialManagementDialog
+        key={`${management.material._id}-${management.mode}-${token}`} {...management} apiBaseUrl={apiBaseUrl} parseResponse={parseResponse}
+        onClose={() => setManagement(null)} onComplete={(data) => {
+          if (management.mode === 'delete') {
+            setMaterials((current) => current.filter((material) => material._id !== management.material._id))
+            setResultCount((current) => Math.max(0, current - 1))
+          } else if (data.material) {
+            setMaterials((current) => current.map((material) => material._id === data.material._id
+              ? { ...material, ...data.material, downloadCount: Math.max(material.downloadCount ?? 0, data.material.downloadCount ?? 0) } : material))
+          }
+          setManagement(null)
+          setNotice(data.message || 'Study material updated.')
+          loadMaterials(appliedFilters.current, true, true)
+        }} />}
+      {notice && <p className="feedback success" role="status">{notice}</p>}
+      {isRefreshing && <p role="status">Refreshing materials…</p>}
+      {error && role === 'instructor' && <button type="button" className="secondary-button"
+        disabled={isLoading || isRefreshing} onClick={() => loadMaterials(appliedFilters.current, true, hasLoaded)}>Retry materials</button>}
+      {bookmarksOnly && bookmarks.loading && bookmarks.hasLoaded && <p role="status">Refreshing bookmarks…</p>}
+      {!bookmarksOnly && bookmarks?.loading && <p role="status">Loading bookmarks…</p>}
+      {bookmarks?.message && <p className="feedback success" role="status">{bookmarks.message}</p>}
+      {bookmarks?.error && bookmarks.error !== error && <p className="feedback error" role="alert">{bookmarks.error}</p>}
+      {bookmarks && (!bookmarks.ready || bookmarks.error) && <button type="button" className="secondary-button" onClick={bookmarks.reload} disabled={bookmarks.loading}>Retry bookmarks</button>}
       {error && <p className="feedback error" role="alert">{error}</p>}
       <p className="results-count" role="status" aria-live="polite">
         {isLoading
           ? 'Loading materials...'
-          : error
+          : error && !hasLoaded
             ? 'Materials unavailable.'
             : `${resultCount} material${resultCount === 1 ? '' : 's'} in ${courseGroups.length} course${courseGroups.length === 1 ? '' : 's'}`}
       </p>
@@ -230,12 +289,12 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
 
       {!isLoading && !error && resultCount === 0 && (
         <div className="empty-state">
-          <h2>No materials found</h2>
-          <p>Try a different keyword or clear the filters to browse the library.</p>
+          <h2>{bookmarksOnly ? 'No bookmarks yet' : 'No materials found'}</h2>
+          <p>{bookmarksOnly ? 'Bookmark materials from Browse materials to find them here.' : 'Try a different keyword or clear the filters to browse the library.'}</p>
         </div>
       )}
 
-      {!isLoading && !error && resultCount > 0 && (
+      {!isLoading && (!error || hasLoaded) && resultCount > 0 && (
         <div className="material-explorer" aria-label="Study materials by course, subject, and topic">
           {courseGroups.map((course) => (
             <details className="explorer-course" key={course.name} open>
@@ -260,7 +319,7 @@ export default function MaterialLibrary({ token, apiBaseUrl, parseResponse, role
                           <div className="topic-materials">
                             {topic.materials.map((material) => (
                               <MaterialRow key={material._id || `${topic.name}-${material.originalFilename}`} material={material}
-                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} />
+                                token={token} apiBaseUrl={apiBaseUrl} canAccessFiles={role === 'student' || role === 'instructor'} canDownload={role === 'student'} onDownloaded={refreshDownloadCount} parseResponse={parseResponse} bookmarks={bookmarks} onManage={role === 'instructor' ? (mode, material) => setManagement({ mode, material, token }) : undefined} />
                             ))}
                           </div>
                         </details>

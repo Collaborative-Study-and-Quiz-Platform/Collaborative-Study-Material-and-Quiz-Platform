@@ -8,6 +8,8 @@ const { viewMaterial, downloadMaterial } = require("./materialFile.controller");
 
 const { createComment, listComments } = require("./materialComment.controller");
 const { createRateLimiter } = require("../../middleware/rateLimit");
+const { updateMaterial, deleteMaterial } = require("./materialManagement.controller");
+const { listBookmarks, saveBookmark, removeBookmark } = require("./bookmark.controller");
 
 const router = express.Router();
 const commentAccess = [
@@ -66,6 +68,11 @@ router.get(
 
 router.get("/:id/comments", ...commentAccess, listComments);
 router.post("/:id/comments", ...commentAccess, commentPostLimit, createComment);
+router.patch("/:id", authenticateToken, authorizeRoles("instructor"), updateMaterial);
+router.delete("/:id", authenticateToken, authorizeRoles("instructor"), deleteMaterial);
+router.get("/bookmarks", authenticateToken, authorizeRoles("student"), listBookmarks);
+router.put("/:id/bookmark", authenticateToken, authorizeRoles("student"), saveBookmark);
+router.delete("/:id/bookmark", authenticateToken, authorizeRoles("student"), removeBookmark);
 
 router.get("/:id/view", authenticateToken, authorizeRoles("student", "instructor"), viewMaterial);
 router.get("/:id/download", authenticateToken, authorizeRoles("student"), downloadMaterial);

@@ -61,7 +61,9 @@ export function Preview({ material, token, apiBaseUrl, onClose, onDownload, down
   )
 }
 
-export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload }) {
+export default function MaterialActions({ material, token, apiBaseUrl, onDownloaded, canDownload, bookmarks }) {
+  const bookmarked = bookmarks?.materials.some((item) => item._id === material._id) ?? false
+  const bookmarkPending = bookmarks?.pending.includes(material._id) ?? false
   const [preview, setPreview] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState('')
@@ -123,7 +125,29 @@ export default function MaterialActions({ material, token, apiBaseUrl, onDownloa
             <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
           </svg>
         </button>}
+        {canDownload && bookmarks && <button type="button"
+          className="secondary-button material-icon-button material-bookmark-button"
+          aria-label={`Bookmark ${material.originalFilename}`}
+          aria-pressed={bookmarked}
+          title={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+          disabled={!bookmarks.ready || bookmarks.loading || bookmarkPending}
+          onClick={async (event) => {
+            const button = event.currentTarget
+            const heading = document.getElementById('library-title')
+            await bookmarks.toggle(material)
+            window.setTimeout(() => {
+              if (!button.isConnected && heading?.isConnected && document.activeElement === document.body) {
+                heading.focus()
+              }
+            }, 0)
+          }}>
+          <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"
+            fill={bookmarked ? 'currentColor' : 'none'}>
+            <path d="M6 3h12v18l-6-4-6 4V3Z" />
+          </svg>
+        </button>}
       </div>
+      {bookmarkPending && <p role="status">Updating bookmark…</p>}
       {downloading && <p role="status">Downloading…</p>}
       {error && <p role="alert">{error}</p>}
       {preview && <Preview material={material} token={token} apiBaseUrl={apiBaseUrl}

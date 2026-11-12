@@ -1,8 +1,10 @@
+import { createRatingState } from './ratingState.js'
 import { updateDownloadCount, withDownloadCount } from './materialCounts.js'
 
 // One store per authenticated session; shared by both material pages.
 export function createBookmarkState({ token, apiBaseUrl, parseResponse, request = fetch }) {
-  let state = { materials: [], loading: true, hasLoaded: false, ready: false, error: '', message: '', pending: [] }
+  let state = { materials: [], loading: true, hasLoaded: false, ready: false, error: '', message: '', pending: [], ratingSummaries: {} }
+  const ratings = createRatingState()
   let revision = 0
   let readController
   let disposed = false
@@ -15,6 +17,7 @@ export function createBookmarkState({ token, apiBaseUrl, parseResponse, request 
   }
   async function load() {
     if (disposed || pending.size) return
+    const ratingRead = ratings.begin()
     const version = ++revision
     readController?.abort()
     readController = new AbortController()
@@ -25,7 +28,8 @@ export function createBookmarkState({ token, apiBaseUrl, parseResponse, request 
       }))
       if (version === revision) {
         const knownCounts = new Map(state.materials.map((material) => [material._id, material.downloadCount]))
-        update({ materials: data.materials.map((material) => withDownloadCount(material, knownCounts.get(material._id))),
+        update({ materials: ratings.merge(data.materials, ratingRead).map((material) => withDownloadCount(material, knownCounts.get(material._id))),
+          ratingSummaries: ratings.snapshot(),
           ready: true, hasLoaded: true, loading: false })
       }
     } catch (error) {
@@ -67,6 +71,17 @@ export function createBookmarkState({ token, apiBaseUrl, parseResponse, request 
     getSnapshot: () => state,
     load,
     toggle,
+    beginRatingRead: ratings.begin,
+    mergeRatingRead(materials, started) {
+      const merged = ratings.merge(materials, started)
+      update({ ratingSummaries: ratings.snapshot() })
+      return merged
+    },
+    rated(id, summary) {
+      ratings.confirm(id, summary)
+      update({ ratingSummaries: ratings.snapshot(), materials: state.materials.map((material) =>
+        material._id === id ? { ...material, ratingSummary: summary } : material) })
+    },
     downloaded(id, count) {
       update({ materials: updateDownloadCount(state.materials, id, count) })
     },

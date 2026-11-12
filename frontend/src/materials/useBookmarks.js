@@ -14,5 +14,6 @@ export default function useBookmarks({ token, studentId, apiBaseUrl, parseRespon
   useEffect(() => {
     if (studentId && (page === 'browse' || page === 'bookmarks')) store.load()
   }, [store, studentId, page])
-  return { ...state, toggle: store.toggle, reload: store.load, downloaded: store.downloaded }
+  return { ...state, toggle: store.toggle, reload: store.load, downloaded: store.downloaded, rated: store.rated,
+    beginRatingRead: store.beginRatingRead, mergeRatingRead: store.mergeRatingRead }
 }

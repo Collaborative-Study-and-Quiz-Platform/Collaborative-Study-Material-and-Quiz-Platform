@@ -1,0 +1,2568 @@
+# FILE: auth-registration.test.js
+TAP version 13
+# Subtest: registers a student without returning the password hash
+ok 1 - registers a student without returning the password hash
+  ---
+  duration_ms: 1704.854
+  type: 'test'
+  ...
+# Subtest: registers an instructor and normalizes role and email
+ok 2 - registers an instructor and normalizes role and email
+  ---
+  duration_ms: 274.164417
+  type: 'test'
+  ...
+# Subtest: rejects missing fields and invalid email
+ok 3 - rejects missing fields and invalid email
+  ---
+  duration_ms: 2.587125
+  type: 'test'
+  ...
+# Subtest: rejects duplicate email registrations
+ok 4 - rejects duplicate email registrations
+  ---
+  duration_ms: 544.010042
+  type: 'test'
+  ...
+# Subtest: stores a bcrypt password hash instead of plaintext
+ok 5 - stores a bcrypt password hash instead of plaintext
+  ---
+  duration_ms: 542.1005
+  type: 'test'
+  ...
+# Subtest: hashes passwords written directly through the user model
+ok 6 - hashes passwords written directly through the user model
+  ---
+  duration_ms: 537.996958
+  type: 'test'
+  ...
+# Subtest: rejects admin self-registration
+ok 7 - rejects admin self-registration
+  ---
+  duration_ms: 4.56925
+  type: 'test'
+  ...
+# Subtest: creates an admin only through the authorized seed process
+ok 8 - creates an admin only through the authorized seed process
+  ---
+  duration_ms: 539.014916
+  type: 'test'
+  ...
+# Subtest: logs in with valid credentials and returns safe user details
+ok 9 - logs in with valid credentials and returns safe user details
+  ---
+  duration_ms: 545.141333
+  type: 'test'
+  ...
+# Subtest: rejects an incorrect password with a generic authentication error
+ok 10 - rejects an incorrect password with a generic authentication error
+  ---
+  duration_ms: 540.276
+  type: 'test'
+  ...
+# Subtest: rejects an unknown email without revealing account existence
+ok 11 - rejects an unknown email without revealing account existence
+  ---
+  duration_ms: 2.355042
+  type: 'test'
+  ...
+# Subtest: rejects missing or malformed login inputs
+ok 12 - rejects missing or malformed login inputs
+  ---
+  duration_ms: 2.239917
+  type: 'test'
+  ...
+# Subtest: signs a verifiable JWT containing only the user id and role
+ok 13 - signs a verifiable JWT containing only the user id and role
+  ---
+  duration_ms: 585.948459
+  type: 'test'
+  ...
+# Subtest: does not expose password data in the login response
+ok 14 - does not expose password data in the login response
+  ---
+  duration_ms: 539.202792
+  type: 'test'
+  ...
+# Subtest: rejects requests to the current-user route without a token
+ok 15 - rejects requests to the current-user route without a token
+  ---
+  duration_ms: 5.262875
+  type: 'test'
+  ...
+# Subtest: rejects requests to the current-user route with an invalid token
+ok 16 - rejects requests to the current-user route with an invalid token
+  ---
+  duration_ms: 1.847083
+  type: 'test'
+  ...
+# Subtest: returns the authenticated user's safe details
+ok 17 - returns the authenticated user's safe details
+  ---
+  duration_ms: 547.327791
+  type: 'test'
+  ...
+# Subtest: rejects unauthenticated role-protected requests with 401
+ok 18 - rejects unauthenticated role-protected requests with 401
+  ---
+  duration_ms: 1.846667
+  type: 'test'
+  ...
+# Subtest: allows a student to access a student-permitted route
+ok 19 - allows a student to access a student-permitted route
+  ---
+  duration_ms: 2.046583
+  type: 'test'
+  ...
+# Subtest: allows an instructor to access an instructor-permitted route
+ok 20 - allows an instructor to access an instructor-permitted route
+  ---
+  duration_ms: 1.845
+  type: 'test'
+  ...
+# Subtest: allows an admin to access an admin-permitted route
+ok 21 - allows an admin to access an admin-permitted route
+  ---
+  duration_ms: 1.78
+  type: 'test'
+  ...
+# Subtest: rejects students and instructors from admin-only routes with 403
+ok 22 - rejects students and instructors from admin-only routes with 403
+  ---
+  duration_ms: 2.476958
+  type: 'test'
+  ...
+# Subtest: rejects students from instructor-only routes with 403
+ok 23 - rejects students from instructor-only routes with 403
+  ---
+  duration_ms: 1.876417
+  type: 'test'
+  ...
+# Subtest: rejects authenticated users with missing or invalid roles
+ok 24 - rejects authenticated users with missing or invalid roles
+  ---
+  duration_ms: 2.573667
+  type: 'test'
+  ...
+# Subtest: fails closed when a route has an invalid role configuration
+ok 25 - fails closed when a route has an invalid role configuration
+  ---
+  duration_ms: 1.966667
+  type: 'test'
+  ...
+# Subtest: does not trust a client-supplied role header or request body
+ok 26 - does not trust a client-supplied role header or request body
+  ---
+  duration_ms: 1.969625
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7542.594375
+
+# FILE: automatic-grading.test.js
+TAP version 13
+# Subtest: TC-Quiz-04: auto-graded score matches the answer key
+    # Subtest: all correct answers get full marks and pass
+    ok 1 - all correct answers get full marks and pass
+      ---
+      duration_ms: 84.723083
+      type: 'test'
+      ...
+    # Subtest: wrong and unanswered questions get zero marks
+    ok 2 - wrong and unanswered questions get zero marks
+      ---
+      duration_ms: 13.4805
+      type: 'test'
+      ...
+    # Subtest: a score exactly at the passing percentage passes
+    ok 3 - a score exactly at the passing percentage passes
+      ---
+      duration_ms: 10.847125
+      type: 'test'
+      ...
+    # Subtest: short answers wait for manual grading and the pass is not decided yet
+    ok 4 - short answers wait for manual grading and the pass is not decided yet
+      ---
+      duration_ms: 13.085208
+      type: 'test'
+      ...
+    # Subtest: the grading is saved with the attempt and shown when viewed again
+    ok 5 - the grading is saved with the attempt and shown when viewed again
+      ---
+      duration_ms: 12.975125
+      type: 'test'
+      ...
+    # Subtest: an attempt that times out is graded with its saved answers
+    ok 6 - an attempt that times out is graded with its saved answers
+      ---
+      duration_ms: 15.297166
+      type: 'test'
+      ...
+    # Subtest: an attempt in progress has no score yet
+    ok 7 - an attempt in progress has no score yet
+      ---
+      duration_ms: 4.580625
+      type: 'test'
+      ...
+    # Subtest: the submitted result does not reveal the answer key
+    ok 8 - the submitted result does not reveal the answer key
+      ---
+      duration_ms: 8.917458
+      type: 'test'
+      ...
+    1..8
+ok 1 - TC-Quiz-04: auto-graded score matches the answer key
+  ---
+  duration_ms: 1438.273542
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-04: grading rules
+    # Subtest: only MCQ and True/False questions are auto-graded
+    ok 1 - only MCQ and True/False questions are auto-graded
+      ---
+      duration_ms: 0.913709
+      type: 'test'
+      ...
+    # Subtest: MCQ answers must match the option exactly; True/False ignores case
+    ok 2 - MCQ answers must match the option exactly; True/False ignores case
+      ---
+      duration_ms: 0.765541
+      type: 'test'
+      ...
+    # Subtest: a question without an answer key is never marked correct
+    ok 3 - a question without an answer key is never marked correct
+      ---
+      duration_ms: 0.752459
+      type: 'test'
+      ...
+    # Subtest: grades a quiz directly from its questions and answers
+    ok 4 - grades a quiz directly from its questions and answers
+      ---
+      duration_ms: 0.810291
+      type: 'test'
+      ...
+    # Subtest: an empty quiz scores zero without dividing by zero
+    ok 5 - an empty quiz scores zero without dividing by zero
+      ---
+      duration_ms: 0.788292
+      type: 'test'
+      ...
+    1..5
+ok 2 - TC-Quiz-04: grading rules
+  ---
+  duration_ms: 4.187208
+  type: 'suite'
+  ...
+1..2
+# tests 13
+# suites 2
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1961.53825
+
+# FILE: available-quizzes.test.js
+TAP version 13
+# Subtest: Available quizzes for students
+    # Subtest: lists quizzes newest first with their details and no answer key
+    ok 1 - lists quizzes newest first with their details and no answer key
+      ---
+      duration_ms: 78.994917
+      type: 'test'
+      ...
+    # Subtest: shows the student's own attempt status and score
+    ok 2 - shows the student's own attempt status and score
+      ---
+      duration_ms: 35.813625
+      type: 'test'
+      ...
+    # Subtest: an attempt whose time ran out is auto-submitted when listed
+    ok 3 - an attempt whose time ran out is auto-submitted when listed
+      ---
+      duration_ms: 14.115416
+      type: 'test'
+      ...
+    # Subtest: subjects and topics still show after a bank question is deleted
+    ok 4 - subjects and topics still show after a bank question is deleted
+      ---
+      duration_ms: 10.207458
+      type: 'test'
+      ...
+    # Subtest: returns an empty list when there are no quizzes
+    ok 5 - returns an empty list when there are no quizzes
+      ---
+      duration_ms: 3.931916
+      type: 'test'
+      ...
+    # Subtest: only students can use it, and instructor quiz routes are unchanged
+    ok 6 - only students can use it, and instructor quiz routes are unchanged
+      ---
+      duration_ms: 7.844709
+      type: 'test'
+      ...
+    1..6
+ok 1 - Available quizzes for students
+  ---
+  duration_ms: 1450.92075
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1894.860125
+
+# FILE: duplicate-questions.test.js
+TAP version 13
+# Subtest: TC-QB-04: adding a near-identical question surfaces a duplicate warning before saving
+    # Subtest: the warning lists the similar question and nothing is saved
+    ok 1 - the warning lists the similar question and nothing is saved
+      ---
+      duration_ms: 69.065708
+      type: 'test'
+      ...
+    # Subtest: a small wording change is still flagged
+    ok 2 - a small wording change is still flagged
+      ---
+      duration_ms: 6.022375
+      type: 'test'
+      ...
+    # Subtest: questions by other instructors are checked too, since the bank is shared
+    ok 3 - questions by other instructors are checked too, since the bank is shared
+      ---
+      duration_ms: 4.875042
+      type: 'test'
+      ...
+    # Subtest: different questions are saved without a warning
+    ok 4 - different questions are saved without a warning
+      ---
+      duration_ms: 8.83675
+      type: 'test'
+      ...
+    # Subtest: the instructor can save anyway after seeing the warning
+    ok 5 - the instructor can save anyway after seeing the warning
+      ---
+      duration_ms: 5.125541
+      type: 'test'
+      ...
+    # Subtest: deleted questions are not counted as duplicates
+    ok 6 - deleted questions are not counted as duplicates
+      ---
+      duration_ms: 9.893667
+      type: 'test'
+      ...
+    # Subtest: lists up to five matches, most similar first
+    ok 7 - lists up to five matches, most similar first
+      ---
+      duration_ms: 15.900583
+      type: 'test'
+      ...
+    1..7
+ok 1 - TC-QB-04: adding a near-identical question surfaces a duplicate warning before saving
+  ---
+  duration_ms: 1348.67075
+  type: 'suite'
+  ...
+# Subtest: TC-QB-04: editing a question's text is checked too
+    # Subtest: changing the text to match another question is flagged; the question itself is ignored
+    ok 1 - changing the text to match another question is flagged; the question itself is ignored
+      ---
+      duration_ms: 15.160958
+      type: 'test'
+      ...
+    1..1
+ok 2 - TC-QB-04: editing a question's text is checked too
+  ---
+  duration_ms: 15.240958
+  type: 'suite'
+  ...
+# Subtest: TC-QB-04: checking for duplicates without saving
+    # Subtest: reports matches, or none, and saves nothing
+    ok 1 - reports matches, or none, and saves nothing
+      ---
+      duration_ms: 7.841416
+      type: 'test'
+      ...
+    # Subtest: rejects missing, too long, or badly formed input
+    ok 2 - rejects missing, too long, or badly formed input
+      ---
+      duration_ms: 2.69825
+      type: 'test'
+      ...
+    # Subtest: students cannot check the question bank
+    ok 3 - students cannot check the question bank
+      ---
+      duration_ms: 1.444584
+      type: 'test'
+      ...
+    1..3
+ok 3 - TC-QB-04: checking for duplicates without saving
+  ---
+  duration_ms: 12.099
+  type: 'suite'
+  ...
+# Subtest: TC-QB-04: similarity rules
+    # Subtest: ignores case, punctuation, accents and extra spaces
+    ok 1 - ignores case, punctuation, accents and extra spaces
+      ---
+      duration_ms: 0.725125
+      type: 'test'
+      ...
+    # Subtest: scores near-identical text above the threshold and different text below it
+    ok 2 - scores near-identical text above the threshold and different text below it
+      ---
+      duration_ms: 0.670292
+      type: 'test'
+      ...
+    # Subtest: handles empty and one-letter text
+    ok 3 - handles empty and one-letter text
+      ---
+      duration_ms: 0.638542
+      type: 'test'
+      ...
+    1..3
+ok 4 - TC-QB-04: similarity rules
+  ---
+  duration_ms: 2.137167
+  type: 'suite'
+  ...
+1..4
+# tests 14
+# suites 4
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1765.917917
+
+# FILE: manual-grading.test.js
+TAP version 13
+# Subtest: TC-Quiz-05: instructor reviews submissions
+    # Subtest: lists submissions with student details and what still needs grading
+    ok 1 - lists submissions with student details and what still needs grading
+      ---
+      duration_ms: 384.628667
+      type: 'test'
+      ...
+    # Subtest: shows one submission with every answer, the answer key and marks
+    ok 2 - shows one submission with every answer, the answer key and marks
+      ---
+      duration_ms: 306.91875
+      type: 'test'
+      ...
+    # Subtest: an attempt that ran out of time is auto-submitted before it is listed
+    ok 3 - an attempt that ran out of time is auto-submitted before it is listed
+      ---
+      duration_ms: 302.374
+      type: 'test'
+      ...
+    1..3
+ok 1 - TC-Quiz-05: instructor reviews submissions
+  ---
+  duration_ms: 2256.483417
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-05: manual marks are added to the auto-graded score (AC-024)
+    # Subtest: grading all short answers completes the score, percentage and pass
+    ok 1 - grading all short answers completes the score, percentage and pass
+      ---
+      duration_ms: 307.179625
+      type: 'test'
+      ...
+    # Subtest: the student's result shows the new score and the marks and feedback
+    ok 2 - the student's result shows the new score and the marks and feedback
+      ---
+      duration_ms: 318.23025
+      type: 'test'
+      ...
+    # Subtest: grading one of two short answers saves it and keeps the rest pending
+    ok 3 - grading one of two short answers saves it and keeps the rest pending
+      ---
+      duration_ms: 304.039375
+      type: 'test'
+      ...
+    # Subtest: marks can be changed later and the score follows
+    ok 4 - marks can be changed later and the score follows
+      ---
+      duration_ms: 308.722542
+      type: 'test'
+      ...
+    # Subtest: unanswered short answers can be given zero to finish grading
+    ok 5 - unanswered short answers can be given zero to finish grading
+      ---
+      duration_ms: 306.019541
+      type: 'test'
+      ...
+    # Subtest: the student is notified once grading is complete, and only once
+    ok 6 - the student is notified once grading is complete, and only once
+      ---
+      duration_ms: 314.964833
+      type: 'test'
+      ...
+    1..6
+ok 2 - TC-Quiz-05: manual marks are added to the auto-graded score (AC-024)
+  ---
+  duration_ms: 1859.421459
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-05: invalid grades and access
+    # Subtest: rejects invalid grades with 422 and changes nothing
+    ok 1 - rejects invalid grades with 422 and changes nothing
+      ---
+      duration_ms: 306.0095
+      type: 'test'
+      ...
+    # Subtest: an attempt still in progress cannot be graded
+    ok 2 - an attempt still in progress cannot be graded
+      ---
+      duration_ms: 296.053542
+      type: 'test'
+      ...
+    # Subtest: only the quiz owner or an admin can see and grade submissions
+    ok 3 - only the quiz owner or an admin can see and grade submissions
+      ---
+      duration_ms: 309.117458
+      type: 'test'
+      ...
+    # Subtest: returns 404 for unknown quizzes and submissions
+    ok 4 - returns 404 for unknown quizzes and submissions
+      ---
+      duration_ms: 298.46525
+      type: 'test'
+      ...
+    # Subtest: a submission from before automatic grading is graded when opened
+    ok 5 - a submission from before automatic grading is graded when opened
+      ---
+      duration_ms: 295.294625
+      type: 'test'
+      ...
+    # Subtest: a deleted student account is shown as unknown
+    ok 6 - a deleted student account is shown as unknown
+      ---
+      duration_ms: 301.296041
+      type: 'test'
+      ...
+    1..6
+ok 3 - TC-Quiz-05: invalid grades and access
+  ---
+  duration_ms: 1806.460708
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-05: score recalculation
+    # Subtest: adds awarded marks and counts ungraded ones as pending
+    ok 1 - adds awarded marks and counts ungraded ones as pending
+      ---
+      duration_ms: 1.823625
+      type: 'test'
+      ...
+    1..1
+ok 4 - TC-Quiz-05: score recalculation
+  ---
+  duration_ms: 1.883792
+  type: 'suite'
+  ...
+1..4
+# tests 16
+# suites 4
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6354.660583
+
+# FILE: material-bookmark.test.js
+TAP version 13
+# Subtest: TC-Mat-04 save/remove are idempotent and persist across authenticated sessions
+ok 1 - TC-Mat-04 save/remove are idempotent and persist across authenticated sessions
+  ---
+  duration_ms: 1288.219375
+  type: 'test'
+  ...
+# Subtest: concurrent saves are protected by the compound unique index
+ok 2 - concurrent saves are protected by the compound unique index
+  ---
+  duration_ms: 48.542458
+  type: 'test'
+  ...
+# Subtest: student accounts are isolated and cannot supply ownership
+ok 3 - student accounts are isolated and cannot supply ownership
+  ---
+  duration_ms: 24.995333
+  type: 'test'
+  ...
+# Subtest: all bookmark routes enforce authentication and student RBAC
+ok 4 - all bookmark routes enforce authentication and student RBAC
+  ---
+  duration_ms: 25.053833
+  type: 'test'
+  ...
+# Subtest: invalid IDs, missing materials and stale references have defined behavior
+ok 5 - invalid IDs, missing materials and stale references have defined behavior
+  ---
+  duration_ms: 16.841667
+  type: 'test'
+  ...
+# Unhandled server error: Error: private database failure
+#     at model.<computed> [as find] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-bookmark.test.js:93:38)
+#     at listBookmarks (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/bookmark.controller.js:26:38)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at /Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authorizeRoles.js:30:12
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at authenticateToken (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authenticateToken.js:37:12)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+# Unhandled server error: Error: private database failure
+#     at model.<computed> [as updateOne] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-bookmark.test.js:93:38)
+#     at saveBookmark (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/bookmark.controller.js:58:22)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: private database failure
+#     at model.<computed> [as deleteOne] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-bookmark.test.js:93:38)
+#     at removeBookmark (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/bookmark.controller.js:76:20)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at /Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authorizeRoles.js:30:12
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at authenticateToken (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authenticateToken.js:37:12)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+# Subtest: database failures use the existing generic error response
+ok 6 - database failures use the existing generic error response
+  ---
+  duration_ms: 8.868083
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1858.121541
+
+# FILE: material-comment-rate-limit.test.js
+TAP version 13
+# Subtest: default comment limit permits ten posts/minute/IP, rejects the eleventh, and does not limit GET
+ok 1 - default comment limit permits ten posts/minute/IP, rejects the eleventh, and does not limit GET
+  ---
+  duration_ms: 1407.717208
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1688.957
+
+# FILE: material-comments.test.js
+TAP version 13
+# Subtest: TC-Collab-01 students and the owning instructor post; another viewer sees comments on next GET
+ok 1 - TC-Collab-01 students and the owning instructor post; another viewer sees comments on next GET
+  ---
+  duration_ms: 1255.757042
+  type: 'test'
+  ...
+# Subtest: GET and POST reject unauthenticated/admin callers and other instructors without expanding visibility
+ok 2 - GET and POST reject unauthenticated/admin callers and other instructors without expanding visibility
+  ---
+  duration_ms: 16.825875
+  type: 'test'
+  ...
+# Subtest: GET and POST reject malformed, missing and deletion-marked material IDs
+ok 3 - GET and POST reject malformed, missing and deletion-marked material IDs
+  ---
+  duration_ms: 11.15475
+  type: 'test'
+  ...
+# Subtest: author identity is JWT-derived and projections expose only public comment/author fields
+ok 4 - author identity is JWT-derived and projections expose only public comment/author fields
+  ---
+  duration_ms: 31.164917
+  type: 'test'
+  ...
+# Subtest: content validation enforces strings, trim, length, control characters and safe input
+ok 5 - content validation enforces strings, trim, length, control characters and safe input
+  ---
+  duration_ms: 23.903667
+  type: 'test'
+  ...
+# Subtest: basic whole-word profanity filter rejects listed words without matching substrings
+ok 6 - basic whole-word profanity filter rejects listed words without matching substrings
+  ---
+  duration_ms: 6.17775
+  type: 'test'
+  ...
+# Subtest: missing authors are safe to display and cannot create new comments
+ok 7 - missing authors are safe to display and cannot create new comments
+  ---
+  duration_ms: 10.07325
+  type: 'test'
+  ...
+# Subtest: cursor pagination is bounded and deterministic across equal timestamps
+ok 8 - cursor pagination is bounded and deterministic across equal timestamps
+  ---
+  duration_ms: 44.543583
+  type: 'test'
+  ...
+# Subtest: new posts do not shift older cursor pages and refresh sees the new comment
+ok 9 - new posts do not shift older cursor pages and refresh sees the new comment
+  ---
+  duration_ms: 12.782333
+  type: 'test'
+  ...
+# Subtest: malformed pagination and cursor input is rejected
+ok 10 - malformed pagination and cursor input is rejected
+  ---
+  duration_ms: 10.642459
+  type: 'test'
+  ...
+# Subtest: concurrent posts leave the parent material and its download count unchanged
+ok 11 - concurrent posts leave the parent material and its download count unchanged
+  ---
+  duration_ms: 22.194958
+  type: 'test'
+  ...
+# Subtest: successful and rejected comment responses use private no-store headers
+ok 12 - successful and rejected comment responses use private no-store headers
+  ---
+  duration_ms: 11.229958
+  type: 'test'
+  ...
+# Unhandled server error: Error: /private/database/details
+#     at model.<computed> [as exists] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-comments.test.js:162:38)
+#     at canAccessMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialComment.controller.js:32:23)
+#     at listComments (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialComment.controller.js:69:16)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at /Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authorizeRoles.js:30:12
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at authenticateToken (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authenticateToken.js:37:12)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+# Unhandled server error: Error: /private/database/details
+#     at model.<computed> [as find] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-comments.test.js:162:38)
+#     at listComments (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialComment.controller.js:76:43)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: /private/database/details
+#     at model.<computed> [as findById] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-comments.test.js:162:38)
+#     at createComment (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialComment.controller.js:108:31)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: /private/database/details
+#     at model.<computed> [as create] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-comments.test.js:162:38)
+#     at createComment (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialComment.controller.js:110:43)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Subtest: database failures return generic errors without leaking private details
+ok 13 - database failures return generic errors without leaking private details
+  ---
+  duration_ms: 8.98
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1912.649542
+
+# FILE: material-file.test.js
+TAP version 13
+# Subtest: Students retain view/download; instructors retain upload and cannot preview unowned materials
+ok 1 - Students retain view/download; instructors retain upload and cannot preview unowned materials
+  ---
+  duration_ms: 1325.000666
+  type: 'test'
+  ...
+# Subtest: PDF preview does not count; TC-Mat-03 download increments exactly once
+ok 2 - PDF preview does not count; TC-Mat-03 download increments exactly once
+  ---
+  duration_ms: 66.182583
+  type: 'test'
+  ...
+# Subtest: concurrent downloads increment atomically; HEAD does not count
+ok 3 - concurrent downloads increment atomically; HEAD does not count
+  ---
+  duration_ms: 20.752084
+  type: 'test'
+  ...
+# Subtest: invalid IDs, missing records/files, traversal, symlinks and directories are rejected without path leakage
+ok 4 - invalid IDs, missing records/files, traversal, symlinks and directories are rejected without path leakage
+  ---
+  duration_ms: 19.542208
+  type: 'test'
+  ...
+# Subtest: legacy records list zero and initialize missing count using $inc
+ok 5 - legacy records list zero and initialize missing count using $inc
+  ---
+  duration_ms: 8.203958
+  type: 'test'
+  ...
+# Subtest: DOCX and legacy PPT downloads use canonical MIME and filename
+ok 6 - DOCX and legacy PPT downloads use canonical MIME and filename
+  ---
+  duration_ms: 14.068417
+  type: 'test'
+  ...
+# Subtest: interrupted transfer never increments
+ok 7 - interrupted transfer never increments
+  ---
+  duration_ms: 128.752709
+  type: 'test'
+  ...
+# Subtest: stream failures do not increment
+ok 8 - stream failures do not increment
+  ---
+  duration_ms: 8.35425
+  type: 'test'
+  ...
+# Subtest: storage access errors return a generic response without counting
+ok 9 - storage access errors return a generic response without counting
+  ---
+  duration_ms: 7.396833
+  type: 'test'
+  ...
+# Subtest: My Uploads is scoped by JWT owner across searches and rejects client ownership overrides
+ok 10 - My Uploads is scoped by JWT owner across searches and rejects client ownership overrides
+  ---
+  duration_ms: 21.192666
+  type: 'test'
+  ...
+# Subtest: instructors preview only owned PDF/DOCX/PPT and never download or increment counters
+ok 11 - instructors preview only owned PDF/DOCX/PPT and never download or increment counters
+  ---
+  duration_ms: 21.515083
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2040.569583
+
+# FILE: material-integration.test.js
+TAP version 13
+# Subtest: bookmark, comment, rate, edit, view/download and delete coexist with ownership and RBAC
+ok 1 - bookmark, comment, rate, edit, view/download and delete coexist with ownership and RBAC
+  ---
+  duration_ms: 1393.649083
+  type: 'test'
+  ...
+# Subtest: deletion-marked and missing materials are hidden; inactive bookmarks cannot be saved
+ok 2 - deletion-marked and missing materials are hidden; inactive bookmarks cannot be saved
+  ---
+  duration_ms: 18.110542
+  type: 'test'
+  ...
+# Unable to load bookmark rating summaries: ratings offline
+# Subtest: bookmark summaries degrade gracefully during rating database failures
+ok 3 - bookmark summaries degrade gracefully during rating database failures
+  ---
+  duration_ms: 8.279416
+  type: 'test'
+  ...
+# Subtest: bookmark save detects a concurrent material deletion
+ok 4 - bookmark save detects a concurrent material deletion
+  ---
+  duration_ms: 7.398167
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1894.228334
+
+# FILE: material-management.test.js
+TAP version 13
+# Subtest: TC-Mat-05 metadata edits preserve identity, ownership, file bytes and download counts
+ok 1 - TC-Mat-05 metadata edits preserve identity, ownership, file bytes and download counts
+  ---
+  duration_ms: 1338.874042
+  type: 'test'
+  ...
+# Subtest: PATCH and DELETE enforce authentication, instructor role and database ownership
+ok 2 - PATCH and DELETE enforce authentication, instructor role and database ownership
+  ---
+  duration_ms: 35.103833
+  type: 'test'
+  ...
+# Subtest: rejects malformed IDs, missing records, extra query fields and unsupported media
+ok 3 - rejects malformed IDs, missing records, extra query fields and unsupported media
+  ---
+  duration_ms: 19.550958
+  type: 'test'
+  ...
+# Subtest: rejects unsafe filenames, invalid tags, protected fields and non-object patches
+ok 4 - rejects unsafe filenames, invalid tags, protected fields and non-object patches
+  ---
+  duration_ms: 33.359041
+  type: 'test'
+  ...
+# Subtest: concurrent disjoint edits and download increments preserve independent fields
+ok 5 - concurrent disjoint edits and download increments preserve independent fields
+  ---
+  duration_ms: 7.57125
+  type: 'test'
+  ...
+# Subtest: a delete between PATCH ownership lookup and write cannot resurrect the material
+ok 6 - a delete between PATCH ownership lookup and write cannot resurrect the material
+  ---
+  duration_ms: 8.117917
+  type: 'test'
+  ...
+# Subtest: successful, concurrent and repeated deletion is safe; an absent file permits cleanup
+ok 7 - successful, concurrent and repeated deletion is safe; an absent file permits cleanup
+  ---
+  duration_ms: 15.054958
+  type: 'test'
+  ...
+# Unhandled server error: Error: /var/folders/m6/ykswzrv11wngfptj3xnv6lvc0000gn/T/csqp-material-management-31229/uploads/6afa78cec469f85db7935a30.pdf
+#     at fs.unlink (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-management.test.js:131:49)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:73:16)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+#   code: 'EACCES'
+# }
+# Subtest: unlink failure leaves a hidden marker; owner can retry without exposing storage paths
+ok 8 - unlink failure leaves a hidden marker; owner can retry without exposing storage paths
+  ---
+  duration_ms: 19.827042
+  type: 'test'
+  ...
+# Unhandled server error: Error: private database error
+#     at Material.updateOne (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-management.test.js:152:44)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:70:20)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: private database error
+#     at Material.deleteOne (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-management.test.js:157:44)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:77:20)
+# Subtest: database failure before marking keeps the file; failure after unlink leaves retryable metadata
+ok 9 - database failure before marking keeps the file; failure after unlink leaves retryable metadata
+  ---
+  duration_ms: 10.118542
+  type: 'test'
+  ...
+# Unhandled server error: Error: Invalid stored material filename
+#     at materialPath (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialStorage.js:10:11)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:68:22)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: Invalid stored material filename
+#     at materialPath (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialStorage.js:10:11)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:68:22)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: Invalid stored material filename
+#     at materialPath (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialStorage.js:10:11)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:68:22)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: Invalid stored material filename
+#     at materialPath (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialStorage.js:10:11)
+#     at deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:68:22)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: EPERM: operation not permitted, unlink '/var/folders/m6/ykswzrv11wngfptj3xnv6lvc0000gn/T/csqp-material-management-31229/uploads/folder.pdf'
+#     at async Object.unlink (node:internal/fs/promises:1068:10)
+#     at async deleteMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:73:7) {
+#   errno: -1,
+#   code: 'EPERM',
+#   syscall: 'unlink',
+#   path: '/var/folders/m6/ykswzrv11wngfptj3xnv6lvc0000gn/T/csqp-material-management-31229/uploads/folder.pdf'
+# }
+# Subtest: deletion rejects stored traversal, never follows symlinks and never removes directories recursively
+ok 10 - deletion rejects stored traversal, never follows symlinks and never removes directories recursively
+  ---
+  duration_ms: 29.197167
+  type: 'test'
+  ...
+# Subtest: edited names/tags propagate to listing and file headers; legacy active records still work
+ok 11 - edited names/tags propagate to listing and file headers; legacy active records still work
+  ---
+  duration_ms: 11.819625
+  type: 'test'
+  ...
+# Unhandled server error: Error: private error
+#     at Material.findOneAndUpdate (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-management.test.js:196:45)
+#     at updateMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialManagement.controller.js:50:37)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Subtest: PATCH database failures return the generic error without touching files
+ok 12 - PATCH database failures return the generic error without touching files
+  ---
+  duration_ms: 4.489209
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1937.349375
+
+# FILE: material-rating.test.js
+TAP version 13
+# Subtest: TC-Collab-03 acceptance: 5 and 1 average 3; updating 5 to 3 gives 2 with count still 2
+ok 1 - TC-Collab-03 acceptance: 5 and 1 average 3; updating 5 to 3 gives 2 with count still 2
+  ---
+  duration_ms: 1345.024416
+  type: 'test'
+  ...
+# Subtest: fractional averages retain precision and summaries isolate the current student
+ok 2 - fractional averages retain precision and summaries isolate the current student
+  ---
+  duration_ms: 29.17
+  type: 'test'
+  ...
+# Subtest: student-only writes, instructor ownership reads, admin and unauthenticated rejection
+ok 3 - student-only writes, instructor ownership reads, admin and unauthenticated rejection
+  ---
+  duration_ms: 20.831375
+  type: 'test'
+  ...
+# Subtest: invalid ratings, protected fields, bodies, query parameters and media types are rejected
+ok 4 - invalid ratings, protected fields, bodies, query parameters and media types are rejected
+  ---
+  duration_ms: 26.825666
+  type: 'test'
+  ...
+# Subtest: malformed, nonexistent and deletion-marked materials reject reads and writes
+ok 5 - malformed, nonexistent and deletion-marked materials reject reads and writes
+  ---
+  duration_ms: 15.872333
+  type: 'test'
+  ...
+# Subtest: a missing student account cannot create a rating
+ok 6 - a missing student account cannot create a rating
+  ---
+  duration_ms: 6.35025
+  type: 'test'
+  ...
+# Subtest: concurrent initial writes and updates retain exactly one ballot per student/material
+ok 7 - concurrent initial writes and updates retain exactly one ballot per student/material
+  ---
+  duration_ms: 51.647291
+  type: 'test'
+  ...
+# Subtest: duplicate-key retry applies the requested value instead of accepting the competing value
+ok 8 - duplicate-key retry applies the requested value instead of accepting the competing value
+  ---
+  duration_ms: 7.184625
+  type: 'test'
+  ...
+# Subtest: bulk listing uses one aggregation and includes only visible summaries and the caller own rating
+ok 9 - bulk listing uses one aggregation and includes only visible summaries and the caller own rating
+  ---
+  duration_ms: 17.01975
+  type: 'test'
+  ...
+# Unable to load material rating summaries: private aggregation error
+# Subtest: rating aggregation failure degrades listing to unavailable, not a false zero or unavailable material list
+ok 10 - rating aggregation failure degrades listing to unavailable, not a false zero or unavailable material list
+  ---
+  duration_ms: 4.8025
+  type: 'test'
+  ...
+# Unhandled server error: Error: /private/database
+#     at model.<computed> [as exists] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:161:67)
+#     at visibleMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:18:23)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:45:16)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at /Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authorizeRoles.js:30:12
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+#     at next (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/route.js:157:13)
+#     at authenticateToken (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/middleware/authenticateToken.js:37:12)
+#     at Layer.handleRequest (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/node_modules/router/lib/layer.js:152:17)
+# Unhandled server error: Error: /private/database
+#     at model.<computed> [as exists] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:161:67)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:46:21)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: /private/database
+#     at model.<computed> [as init] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:161:67)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:50:26)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: /private/database
+#     at model.<computed> [as updateOne] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:161:67)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:53:28)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: /private/database
+#     at model.<computed> [as aggregate] (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:161:67)
+#     at ratingSummaries (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.service.js:11:37)
+#     at ratingSummary (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.service.js:27:17)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:63:90)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Unhandled server error: Error: private
+#     at MaterialRating.aggregate (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:167:88)
+#     at ratingSummaries (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.service.js:11:37)
+#     at ratingSummary (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.service.js:27:17)
+#     at getRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:31:90)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+# Subtest: database failures are generic; retry after a committed write keeps the count unchanged
+ok 11 - database failures are generic; retry after a committed write keeps the count unchanged
+  ---
+  duration_ms: 20.38725
+  type: 'test'
+  ...
+# Unhandled server error: Error: private key
+#     at MaterialRating.updateOne (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-rating.test.js:172:58)
+#     at putRating (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/materialRating.controller.js:53:28)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+#   code: 11000,
+#   keyPattern: { _id: 1 }
+# }
+# Subtest: unrelated duplicate-key errors do not report a successful rating
+ok 12 - unrelated duplicate-key errors do not report a successful rating
+  ---
+  duration_ms: 4.888375
+  type: 'test'
+  ...
+# Subtest: deletion racing an upsert is detected and an orphan ballot remains inaccessible
+ok 13 - deletion racing an upsert is detected and an orphan ballot remains inaccessible
+  ---
+  duration_ms: 12.02775
+  type: 'test'
+  ...
+# Subtest: rating writes leave parent metadata, counter, uploader, timestamps and physical file bytes unchanged
+ok 14 - rating writes leave parent metadata, counter, uploader, timestamps and physical file bytes unchanged
+  ---
+  duration_ms: 18.232959
+  type: 'test'
+  ...
+# Subtest: GET/PUT canonicalize ABCDEFABCDEFABCDEFABCDEF and preserve one vote and material-list summaries
+ok 15 - GET/PUT canonicalize ABCDEFABCDEFABCDEFABCDEF and preserve one vote and material-list summaries
+  ---
+  duration_ms: 20.100542
+  type: 'test'
+  ...
+# Subtest: GET/PUT canonicalize aBcDeFaBcDeFaBcDeFaBcDeF and preserve one vote and material-list summaries
+ok 16 - GET/PUT canonicalize aBcDeFaBcDeFaBcDeFaBcDeF and preserve one vote and material-list summaries
+  ---
+  duration_ms: 30.354708
+  type: 'test'
+  ...
+# Subtest: GET/PUT canonicalize abcdefabcdefabcdefabcdef and preserve one vote and material-list summaries
+ok 17 - GET/PUT canonicalize abcdefabcdefabcdefabcdef and preserve one vote and material-list summaries
+  ---
+  duration_ms: 20.675416
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2071.279125
+
+# FILE: material-search.test.js
+TAP version 13
+# Subtest: returns materials and supports keyword, course, subject, topic, and combined filters
+ok 1 - returns materials and supports keyword, course, subject, topic, and combined filters
+  ---
+  duration_ms: 1305.00375
+  type: 'test'
+  ...
+# Subtest: allows students and instructors to browse while preserving other authorization checks
+ok 2 - allows students and instructors to browse while preserving other authorization checks
+  ---
+  duration_ms: 19.769208
+  type: 'test'
+  ...
+# Subtest: rejects invalid query parameter types and oversized values
+ok 3 - rejects invalid query parameter types and oversized values
+  ---
+  duration_ms: 3.5085
+  type: 'test'
+  ...
+# Subtest: materials created by the upload flow are retrievable by students
+ok 4 - materials created by the upload flow are retrievable by students
+  ---
+  duration_ms: 32.032166
+  type: 'test'
+  ...
+# TC-Mat-02 seeded search: 1000 records in 17.52 ms
+# Subtest: search meets the two-second target on a repeatable seeded dataset
+ok 5 - search meets the two-second target on a repeatable seeded dataset
+  ---
+  duration_ms: 232.363708
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2003.622708
+
+# FILE: material-upload.test.js
+TAP version 13
+# Subtest: TC-Mat-01 accepts valid PDF, DOCX, and PPT uploads for instructors
+ok 1 - TC-Mat-01 accepts valid PDF, DOCX, and PPT uploads for instructors
+  ---
+  duration_ms: 1400.455209
+  type: 'test'
+  ...
+# Subtest: rejects unsupported, invalid, oversized, and missing files
+ok 2 - rejects unsupported, invalid, oversized, and missing files
+  ---
+  duration_ms: 8.448709
+  type: 'test'
+  ...
+# Subtest: rejects multipart requests beyond the configured field limits
+ok 3 - rejects multipart requests beyond the configured field limits
+  ---
+  duration_ms: 4.175167
+  type: 'test'
+  ...
+# Subtest: requires authentication and the instructor role
+ok 4 - requires authentication and the instructor role
+  ---
+  duration_ms: 3.767375
+  type: 'test'
+  ...
+# Subtest: rejects invalid tags without persisting a file
+ok 5 - rejects invalid tags without persisting a file
+  ---
+  duration_ms: 2.493875
+  type: 'test'
+  ...
+# Unhandled server error: Error: simulated persistence failure
+#     at Material.create (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/test/material-upload.test.js:154:11)
+#     at createMaterial (/Users/sudeepkh/Downloads/se-lab/Collaborative-Study-Material-and-Quiz-Platform/backend/src/modules/material/material.controller.js:158:33)
+# Subtest: cleans up the stored file when persistence fails
+ok 6 - cleans up the stored file when persistence fails
+  ---
+  duration_ms: 3.275292
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1822.317125
+
+# FILE: password-reset.test.js
+TAP version 13
+# Subtest: forgot password rejects a missing email
+ok 1 - forgot password rejects a missing email
+  ---
+  duration_ms: 1369.297542
+  type: 'test'
+  ...
+# Subtest: forgot password returns a generic response for an unknown email
+ok 2 - forgot password returns a generic response for an unknown email
+  ---
+  duration_ms: 9.889666
+  type: 'test'
+  ...
+# Subtest: forgot password creates a token and sends an email
+ok 3 - forgot password creates a token and sends an email
+  ---
+  duration_ms: 287.691083
+  type: 'test'
+  ...
+# Subtest: reset password rejects an invalid token
+ok 4 - reset password rejects an invalid token
+  ---
+  duration_ms: 2.662458
+  type: 'test'
+  ...
+# Subtest: reset password rejects an expired token
+ok 5 - reset password rejects an expired token
+  ---
+  duration_ms: 271.502083
+  type: 'test'
+  ...
+# Subtest: reset password updates the password and prevents token reuse
+ok 6 - reset password updates the password and prevents token reuse
+  ---
+  duration_ms: 815.572041
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3188.043708
+
+# FILE: protected-routes.test.js
+TAP version 13
+# Subtest: every protected API route requires authentication and denies disallowed roles
+ok 1 - every protected API route requires authentication and denies disallowed roles
+  ---
+  duration_ms: 44.163875
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 293.422583
+
+# FILE: question-bank.test.js
+TAP version 13
+# Subtest: TC-QB-01: add a question
+    # Subtest: instructor adds an MCQ question with metadata
+    ok 1 - instructor adds an MCQ question with metadata
+      ---
+      duration_ms: 60.7575
+      type: 'test'
+      ...
+    # Subtest: normalizes type, difficulty, and a boolean true/false answer
+    ok 2 - normalizes type, difficulty, and a boolean true/false answer
+      ---
+      duration_ms: 6.916667
+      type: 'test'
+      ...
+    # Subtest: accepts a short-answer question with or without a model answer
+    ok 3 - accepts a short-answer question with or without a model answer
+      ---
+      duration_ms: 7.370625
+      type: 'test'
+      ...
+    # Subtest: admin can add a question
+    ok 4 - admin can add a question
+      ---
+      duration_ms: 3.335958
+      type: 'test'
+      ...
+    # Subtest: rejects missing fields with clear errors
+    ok 5 - rejects missing fields with clear errors
+      ---
+      duration_ms: 3.349417
+      type: 'test'
+      ...
+    # Subtest: rejects metadata and text that are too long
+    ok 6 - rejects metadata and text that are too long
+      ---
+      duration_ms: 1.74475
+      type: 'test'
+      ...
+    # Subtest: rejects invalid MCQ options and answers
+    ok 7 - rejects invalid MCQ options and answers
+      ---
+      duration_ms: 5.52925
+      type: 'test'
+      ...
+    # Subtest: rejects invalid true/false and short-answer input
+    ok 8 - rejects invalid true/false and short-answer input
+      ---
+      duration_ms: 3.049042
+      type: 'test'
+      ...
+    1..8
+ok 1 - TC-QB-01: add a question
+  ---
+  duration_ms: 1342.089625
+  type: 'suite'
+  ...
+# Subtest: TC-QB-01: retrieve questions by metadata
+    # Subtest: filters by subject, topic, difficulty, and type
+    ok 1 - filters by subject, topic, difficulty, and type
+      ---
+      duration_ms: 17.826708
+      type: 'test'
+      ...
+    # Subtest: rejects invalid filter values
+    ok 2 - rejects invalid filter values
+      ---
+      duration_ms: 1.481625
+      type: 'test'
+      ...
+    # Subtest: gets one question by its ID
+    ok 3 - gets one question by its ID
+      ---
+      duration_ms: 5.05025
+      type: 'test'
+      ...
+    # Subtest: returns 404 for unknown or malformed IDs
+    ok 4 - returns 404 for unknown or malformed IDs
+      ---
+      duration_ms: 3.217958
+      type: 'test'
+      ...
+    1..4
+ok 2 - TC-QB-01: retrieve questions by metadata
+  ---
+  duration_ms: 27.725583
+  type: 'suite'
+  ...
+# Subtest: TC-QB-01: edit a question
+    # Subtest: owner edits a question and it is retrievable by its new metadata
+    ok 1 - owner edits a question and it is retrievable by its new metadata
+      ---
+      duration_ms: 12.406708
+      type: 'test'
+      ...
+    # Subtest: changing an MCQ to true/false clears its options
+    ok 2 - changing an MCQ to true/false clears its options
+      ---
+      duration_ms: 5.840791
+      type: 'test'
+      ...
+    # Subtest: clearing a short-answer model answer removes it
+    ok 3 - clearing a short-answer model answer removes it
+      ---
+      duration_ms: 5.018917
+      type: 'test'
+      ...
+    # Subtest: rejects invalid edits and keeps the original
+    ok 4 - rejects invalid edits and keeps the original
+      ---
+      duration_ms: 5.797959
+      type: 'test'
+      ...
+    # Subtest: another instructor cannot edit the question but an admin can
+    ok 5 - another instructor cannot edit the question but an admin can
+      ---
+      duration_ms: 6.94275
+      type: 'test'
+      ...
+    # Subtest: returns 404 when editing an unknown question
+    ok 6 - returns 404 when editing an unknown question
+      ---
+      duration_ms: 2.060167
+      type: 'test'
+      ...
+    1..6
+ok 3 - TC-QB-01: edit a question
+  ---
+  duration_ms: 38.257042
+  type: 'suite'
+  ...
+# Subtest: TC-QB-01: delete a question
+    # Subtest: owner soft-deletes a question so it no longer appears in the bank
+    ok 1 - owner soft-deletes a question so it no longer appears in the bank
+      ---
+      duration_ms: 9.15675
+      type: 'test'
+      ...
+    # Subtest: a deleted question cannot be edited or deleted again
+    ok 2 - a deleted question cannot be edited or deleted again
+      ---
+      duration_ms: 7.329042
+      type: 'test'
+      ...
+    # Subtest: another instructor cannot delete the question but an admin can
+    ok 3 - another instructor cannot delete the question but an admin can
+      ---
+      duration_ms: 6.256042
+      type: 'test'
+      ...
+    1..3
+ok 4 - TC-QB-01: delete a question
+  ---
+  duration_ms: 22.855166
+  type: 'suite'
+  ...
+# Subtest: TC-QB-01: access control
+    # Subtest: students cannot use the question bank
+    ok 1 - students cannot use the question bank
+      ---
+      duration_ms: 6.237167
+      type: 'test'
+      ...
+    # Subtest: requests without a token are rejected
+    ok 2 - requests without a token are rejected
+      ---
+      duration_ms: 1.326583
+      type: 'test'
+      ...
+    1..2
+ok 5 - TC-QB-01: access control
+  ---
+  duration_ms: 7.653208
+  type: 'suite'
+  ...
+1..5
+# tests 23
+# suites 5
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1835.613666
+
+# FILE: question-import-parser.test.js
+TAP version 13
+# Subtest: CSV parsing
+    # Subtest: splits simple rows and numbers them from 1
+    ok 1 - splits simple rows and numbers them from 1
+      ---
+      duration_ms: 0.965167
+      type: 'test'
+      ...
+    # Subtest: handles quotes, commas and line breaks inside fields, and doubled quotes
+    ok 2 - handles quotes, commas and line breaks inside fields, and doubled quotes
+      ---
+      duration_ms: 0.111583
+      type: 'test'
+      ...
+    # Subtest: ignores a leading byte order mark and reads semicolon or tab separated files
+    ok 3 - ignores a leading byte order mark and reads semicolon or tab separated files
+      ---
+      duration_ms: 0.094708
+      type: 'test'
+      ...
+    # Subtest: keeps empty fields and a last row with no line break
+    ok 4 - keeps empty fields and a last row with no line break
+      ---
+      duration_ms: 0.070916
+      type: 'test'
+      ...
+    # Subtest: rejects a quote that is never closed
+    ok 5 - rejects a quote that is never closed
+      ---
+      duration_ms: 0.253542
+      type: 'test'
+      ...
+    1..5
+ok 1 - CSV parsing
+  ---
+  duration_ms: 2.118417
+  type: 'suite'
+  ...
+# Subtest: XLSX parsing
+    # Subtest: reads text, numbers and booleans from the first sheet
+    ok 1 - reads text, numbers and booleans from the first sheet
+      ---
+      duration_ms: 1.942167
+      type: 'test'
+      ...
+    # Subtest: keeps column positions when a cell is empty
+    ok 2 - keeps column positions when a cell is empty
+      ---
+      duration_ms: 0.837416
+      type: 'test'
+      ...
+    # Subtest: rejects files that are not workbooks
+    ok 3 - rejects files that are not workbooks
+      ---
+      duration_ms: 0.238125
+      type: 'test'
+      ...
+    1..3
+ok 2 - XLSX parsing
+  ---
+  duration_ms: 3.100875
+  type: 'suite'
+  ...
+# Subtest: file type detection
+    # Subtest: chooses the reader from the file extension
+    ok 1 - chooses the reader from the file extension
+      ---
+      duration_ms: 0.324625
+      type: 'test'
+      ...
+    # Subtest: rejects other extensions and fake .xlsx files
+    ok 2 - rejects other extensions and fake .xlsx files
+      ---
+      duration_ms: 0.1135
+      type: 'test'
+      ...
+    1..2
+ok 3 - file type detection
+  ---
+  duration_ms: 0.494041
+  type: 'suite'
+  ...
+# Subtest: columns and rows
+    # Subtest: matches header names ignoring case, spaces and aliases
+    ok 1 - matches header names ignoring case, spaces and aliases
+      ---
+      duration_ms: 0.259125
+      type: 'test'
+      ...
+    # Subtest: lists the required columns that are missing
+    ok 2 - lists the required columns that are missing
+      ---
+      duration_ms: 0.064625
+      type: 'test'
+      ...
+    # Subtest: builds a question body from separate option columns
+    ok 3 - builds a question body from separate option columns
+      ---
+      duration_ms: 0.143292
+      type: 'test'
+      ...
+    # Subtest: builds options from one pipe separated column
+    ok 4 - builds options from one pipe separated column
+      ---
+      duration_ms: 0.065417
+      type: 'test'
+      ...
+    # Subtest: leaves a blank correct answer out
+    ok 5 - leaves a blank correct answer out
+      ---
+      duration_ms: 0.046375
+      type: 'test'
+      ...
+    1..5
+ok 4 - columns and rows
+  ---
+  duration_ms: 0.6475
+  type: 'suite'
+  ...
+1..4
+# tests 15
+# suites 4
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62.554708
+
+# FILE: question-import.test.js
+TAP version 13
+# Subtest: TC-QB-03 bulk question import
+    # Subtest: imports every row of a valid CSV file
+    ok 1 - imports every row of a valid CSV file
+      ---
+      duration_ms: 65.680417
+      type: 'test'
+      ...
+    # Subtest: imported questions appear in the question bank
+    ok 2 - imported questions appear in the question bank
+      ---
+      duration_ms: 11.222958
+      type: 'test'
+      ...
+    # Subtest: imports an Excel workbook
+    ok 3 - imports an Excel workbook
+      ---
+      duration_ms: 6.033833
+      type: 'test'
+      ...
+    # Subtest: saves valid rows and reports each invalid row with its reason
+    ok 4 - saves valid rows and reports each invalid row with its reason
+      ---
+      duration_ms: 4.885375
+      type: 'test'
+      ...
+    # Subtest: skips duplicates inside the file and questions already in the bank
+    ok 5 - skips duplicates inside the file and questions already in the bank
+      ---
+      duration_ms: 6.936208
+      type: 'test'
+      ...
+    # Subtest: returns 400 and saves nothing when no row is valid
+    ok 6 - returns 400 and saves nothing when no row is valid
+      ---
+      duration_ms: 2.667
+      type: 'test'
+      ...
+    # Subtest: rejects a file with missing required columns
+    ok 7 - rejects a file with missing required columns
+      ---
+      duration_ms: 1.927542
+      type: 'test'
+      ...
+    # Subtest: rejects an empty file, a header-only file and a file with too many rows
+    ok 8 - rejects an empty file, a header-only file and a file with too many rows
+      ---
+      duration_ms: 6.401542
+      type: 'test'
+      ...
+    # Subtest: rejects a missing file, an unsupported file type and an oversized file
+    ok 9 - rejects a missing file, an unsupported file type and an oversized file
+      ---
+      duration_ms: 16.895625
+      type: 'test'
+      ...
+    # Subtest: only instructors and admins can import
+    ok 10 - only instructors and admins can import
+      ---
+      duration_ms: 3.255042
+      type: 'test'
+      ...
+    1..10
+ok 1 - TC-QB-03 bulk question import
+  ---
+  duration_ms: 1387.119125
+  type: 'suite'
+  ...
+1..1
+# tests 10
+# suites 1
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1796.124708
+
+# FILE: question-search.test.js
+TAP version 13
+# Subtest: TC-QB-02: questions can be tagged
+    # Subtest: tags are saved trimmed, lower case and without repeats
+    ok 1 - tags are saved trimmed, lower case and without repeats
+      ---
+      duration_ms: 62.711792
+      type: 'test'
+      ...
+    # Subtest: tags can be sent as comma-separated text, or left out
+    ok 2 - tags can be sent as comma-separated text, or left out
+      ---
+      duration_ms: 8.98925
+      type: 'test'
+      ...
+    # Subtest: rejects too many, too long, or badly formed tags
+    ok 3 - rejects too many, too long, or badly formed tags
+      ---
+      duration_ms: 4.538625
+      type: 'test'
+      ...
+    # Subtest: tags can be changed when editing, and kept when not sent
+    ok 4 - tags can be changed when editing, and kept when not sent
+      ---
+      duration_ms: 14.408916
+      type: 'test'
+      ...
+    # Subtest: lists the tags in use, most used first
+    ok 5 - lists the tags in use, most used first
+      ---
+      duration_ms: 17.222958
+      type: 'test'
+      ...
+    # Subtest: tags from deleted questions are not suggested
+    ok 6 - tags from deleted questions are not suggested
+      ---
+      duration_ms: 6.972708
+      type: 'test'
+      ...
+    1..6
+ok 1 - TC-QB-02: questions can be tagged
+  ---
+  duration_ms: 1356.427834
+  type: 'suite'
+  ...
+# Subtest: TC-QB-02: filtered results match all applied filter criteria
+    # Subtest: filters by a single tag
+    ok 1 - filters by a single tag
+      ---
+      duration_ms: 17.731167
+      type: 'test'
+      ...
+    # Subtest: several tags must all be present
+    ok 2 - several tags must all be present
+      ---
+      duration_ms: 13.685208
+      type: 'test'
+      ...
+    # Subtest: searches the question text by keyword, ignoring case and word order
+    ok 3 - searches the question text by keyword, ignoring case and word order
+      ---
+      duration_ms: 16.050625
+      type: 'test'
+      ...
+    # Subtest: keyword search treats special characters as plain text
+    ok 4 - keyword search treats special characters as plain text
+      ---
+      duration_ms: 5.801542
+      type: 'test'
+      ...
+    # Subtest: combines tag, keyword, subject, topic, difficulty and type
+    ok 5 - combines tag, keyword, subject, topic, difficulty and type
+      ---
+      duration_ms: 14.609375
+      type: 'test'
+      ...
+    # Subtest: every result matches every applied filter
+    ok 6 - every result matches every applied filter
+      ---
+      duration_ms: 20.036792
+      type: 'test'
+      ...
+    # Subtest: blank search and tag values are ignored
+    ok 7 - blank search and tag values are ignored
+      ---
+      duration_ms: 12.694583
+      type: 'test'
+      ...
+    # Subtest: rejects search text that is too long or repeated
+    ok 8 - rejects search text that is too long or repeated
+      ---
+      duration_ms: 2.252667
+      type: 'test'
+      ...
+    # Subtest: deleted questions never appear in search results
+    ok 9 - deleted questions never appear in search results
+      ---
+      duration_ms: 5.761917
+      type: 'test'
+      ...
+    # Subtest: students cannot search the question bank or list tags
+    ok 10 - students cannot search the question bank or list tags
+      ---
+      duration_ms: 2.049167
+      type: 'test'
+      ...
+    1..10
+ok 2 - TC-QB-02: filtered results match all applied filter criteria
+  ---
+  duration_ms: 110.962167
+  type: 'suite'
+  ...
+# Subtest: TC-QB-02: imported questions can carry tags
+    # Subtest: a tags column in a CSV import is saved and searchable
+    ok 1 - a tags column in a CSV import is saved and searchable
+      ---
+      duration_ms: 10.954917
+      type: 'test'
+      ...
+    1..1
+ok 3 - TC-QB-02: imported questions can carry tags
+  ---
+  duration_ms: 11.024209
+  type: 'suite'
+  ...
+1..3
+# tests 17
+# suites 3
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1878.539292
+
+# FILE: quiz-attempt.test.js
+TAP version 13
+# Subtest: TC-Quiz-03: start a timed attempt
+    # Subtest: student starts the quiz and gets the timer and questions without answers
+    ok 1 - student starts the quiz and gets the timer and questions without answers
+      ---
+      duration_ms: 64.563667
+      type: 'test'
+      ...
+    # Subtest: starting again resumes the same attempt with the same deadline
+    ok 2 - starting again resumes the same attempt with the same deadline
+      ---
+      duration_ms: 13.559291
+      type: 'test'
+      ...
+    # Subtest: two start requests at the same moment create only one attempt
+    ok 3 - two start requests at the same moment create only one attempt
+      ---
+      duration_ms: 11.70625
+      type: 'test'
+      ...
+    # Subtest: each student gets their own attempt
+    ok 4 - each student gets their own attempt
+      ---
+      duration_ms: 9.2885
+      type: 'test'
+      ...
+    # Subtest: returns 404 for an unknown or malformed quiz
+    ok 5 - returns 404 for an unknown or malformed quiz
+      ---
+      duration_ms: 5.129292
+      type: 'test'
+      ...
+    # Subtest: returns 404 when viewing an attempt that was never started
+    ok 6 - returns 404 when viewing an attempt that was never started
+      ---
+      duration_ms: 4.881125
+      type: 'test'
+      ...
+    1..6
+ok 1 - TC-Quiz-03: start a timed attempt
+  ---
+  duration_ms: 1398.612542
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-03: answer and submit within the time
+    # Subtest: saves answers as the student goes, and can change or clear them
+    ok 1 - saves answers as the student goes, and can change or clear them
+      ---
+      duration_ms: 24.659416
+      type: 'test'
+      ...
+    # Subtest: submits with the final answers and keeps earlier saved ones
+    ok 2 - submits with the final answers and keeps earlier saved ones
+      ---
+      duration_ms: 14.4415
+      type: 'test'
+      ...
+    # Subtest: submitting without an answers list uses the saved answers
+    ok 3 - submitting without an answers list uses the saved answers
+      ---
+      duration_ms: 13.067208
+      type: 'test'
+      ...
+    # Subtest: a submit sent just after the timer ends is still accepted
+    ok 4 - a submit sent just after the timer ends is still accepted
+      ---
+      duration_ms: 12.05675
+      type: 'test'
+      ...
+    # Subtest: a submitted attempt cannot be changed, submitted or started again
+    ok 5 - a submitted attempt cannot be changed, submitted or started again
+      ---
+      duration_ms: 24.539542
+      type: 'test'
+      ...
+    # Subtest: rejects invalid answer payloads with 422
+    ok 6 - rejects invalid answer payloads with 422
+      ---
+      duration_ms: 14.165875
+      type: 'test'
+      ...
+    # Subtest: an empty true/false answer clears it
+    ok 7 - an empty true/false answer clears it
+      ---
+      duration_ms: 11.163792
+      type: 'test'
+      ...
+    # Subtest: saving or submitting before starting returns 404
+    ok 8 - saving or submitting before starting returns 404
+      ---
+      duration_ms: 6.102459
+      type: 'test'
+      ...
+    1..8
+ok 2 - TC-Quiz-03: answer and submit within the time
+  ---
+  duration_ms: 120.486542
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-03: timer expires without submitting
+    # Subtest: the quiz auto-submits and keeps every answer saved before time-out
+    ok 1 - the quiz auto-submits and keeps every answer saved before time-out
+      ---
+      duration_ms: 13.955458
+      type: 'test'
+      ...
+    # Subtest: answers sent after time-out are refused and the saved answers are submitted
+    ok 2 - answers sent after time-out are refused and the saved answers are submitted
+      ---
+      duration_ms: 15.353417
+      type: 'test'
+      ...
+    # Subtest: starting again after time-out reports the automatic submission
+    ok 3 - starting again after time-out reports the automatic submission
+      ---
+      duration_ms: 12.150791
+      type: 'test'
+      ...
+    # Subtest: an in-progress attempt shows the time left
+    ok 4 - an in-progress attempt shows the time left
+      ---
+      duration_ms: 7.551167
+      type: 'test'
+      ...
+    1..4
+ok 3 - TC-Quiz-03: timer expires without submitting
+  ---
+  duration_ms: 49.176375
+  type: 'suite'
+  ...
+# Subtest: TC-Auth-03: only students can attempt quizzes
+    # Subtest: instructors cannot start, view, save or submit attempts
+    ok 1 - instructors cannot start, view, save or submit attempts
+      ---
+      duration_ms: 4.547209
+      type: 'test'
+      ...
+    # Subtest: requests without a token are rejected
+    ok 2 - requests without a token are rejected
+      ---
+      duration_ms: 2.776666
+      type: 'test'
+      ...
+    # Subtest: instructors can still create and view quizzes
+    ok 3 - instructors can still create and view quizzes
+      ---
+      duration_ms: 4.072917
+      type: 'test'
+      ...
+    1..3
+ok 4 - TC-Auth-03: only students can attempt quizzes
+  ---
+  duration_ms: 11.501334
+  type: 'suite'
+  ...
+1..4
+# tests 21
+# suites 4
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2017.695833
+
+# FILE: quiz-results.test.js
+TAP version 13
+# Subtest: TC-Quiz-06: the result screen shows the student's score
+    # Subtest: shows the score summary after submission
+    ok 1 - shows the score summary after submission
+      ---
+      duration_ms: 84.099709
+      type: 'test'
+      ...
+    # Subtest: shows the result of an attempt that was auto-submitted
+    ok 2 - shows the result of an attempt that was auto-submitted
+      ---
+      duration_ms: 17.346875
+      type: 'test'
+      ...
+    # Subtest: shows pending marks while short answers wait for manual grading
+    ok 3 - shows pending marks while short answers wait for manual grading
+      ---
+      duration_ms: 14.626666
+      type: 'test'
+      ...
+    # Subtest: grades an older submitted attempt that has no grading yet
+    ok 4 - grades an older submitted attempt that has no grading yet
+      ---
+      duration_ms: 10.236334
+      type: 'test'
+      ...
+    1..4
+ok 1 - TC-Quiz-06: the result screen shows the student's score
+  ---
+  duration_ms: 1424.242791
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-06: correct answers shown only if the Instructor enabled them
+    # Subtest: with showAnswers on, every question is reviewed with the correct answer
+    ok 1 - with showAnswers on, every question is reviewed with the correct answer
+      ---
+      duration_ms: 13.818542
+      type: 'test'
+      ...
+    # Subtest: with showAnswers off, no review or answer key is sent
+    ok 2 - with showAnswers off, no review or answer key is sent
+      ---
+      duration_ms: 12.417042
+      type: 'test'
+      ...
+    # Subtest: short answers in the review show the student's answer but no marks yet
+    ok 3 - short answers in the review show the student's answer but no marks yet
+      ---
+      duration_ms: 13.090209
+      type: 'test'
+      ...
+    1..3
+ok 2 - TC-Quiz-06: correct answers shown only if the Instructor enabled them
+  ---
+  duration_ms: 39.488
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-06: results are private and only after submission
+    # Subtest: results are not available while the attempt is in progress
+    ok 1 - results are not available while the attempt is in progress
+      ---
+      duration_ms: 7.325333
+      type: 'test'
+      ...
+    # Subtest: returns 404 when the student never attempted the quiz
+    ok 2 - returns 404 when the student never attempted the quiz
+      ---
+      duration_ms: 5.406583
+      type: 'test'
+      ...
+    # Subtest: each student only sees their own result
+    ok 3 - each student only sees their own result
+      ---
+      duration_ms: 27.461042
+      type: 'test'
+      ...
+    # Subtest: instructors and requests without a token cannot use the student result route
+    ok 4 - instructors and requests without a token cannot use the student result route
+      ---
+      duration_ms: 4.146583
+      type: 'test'
+      ...
+    1..4
+ok 3 - TC-Quiz-06: results are private and only after submission
+  ---
+  duration_ms: 44.506083
+  type: 'suite'
+  ...
+1..3
+# tests 11
+# suites 3
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1946.931583
+
+# FILE: quiz-schedule.test.js
+TAP version 13
+# Subtest: TC-Quiz-02: instructor schedules a quiz
+    # Subtest: a quiz can be scheduled when it is created
+    ok 1 - a quiz can be scheduled when it is created
+      ---
+      duration_ms: 67.662459
+      type: 'test'
+      ...
+    # Subtest: a quiz created without a schedule is unscheduled
+    ok 2 - a quiz created without a schedule is unscheduled
+      ---
+      duration_ms: 8.722
+      type: 'test'
+      ...
+    # Subtest: rejects invalid schedules when creating a quiz
+    ok 3 - rejects invalid schedules when creating a quiz
+      ---
+      duration_ms: 11.705917
+      type: 'test'
+      ...
+    # Subtest: the owner can schedule, reschedule, and unschedule a quiz
+    ok 4 - the owner can schedule, reschedule, and unschedule a quiz
+      ---
+      duration_ms: 14.680458
+      type: 'test'
+      ...
+    # Subtest: rejects an invalid schedule update and keeps the old one
+    ok 5 - rejects an invalid schedule update and keeps the old one
+      ---
+      duration_ms: 7.396583
+      type: 'test'
+      ...
+    # Subtest: only the owner or an admin can schedule; students cannot
+    ok 6 - only the owner or an admin can schedule; students cannot
+      ---
+      duration_ms: 9.459375
+      type: 'test'
+      ...
+    # Subtest: returns 404 when scheduling an unknown or malformed quiz
+    ok 7 - returns 404 when scheduling an unknown or malformed quiz
+      ---
+      duration_ms: 5.726208
+      type: 'test'
+      ...
+    # Subtest: instructor quiz list shows each quiz's schedule status
+    ok 8 - instructor quiz list shows each quiz's schedule status
+      ---
+      duration_ms: 6.398167
+      type: 'test'
+      ...
+    1..8
+ok 1 - TC-Quiz-02: instructor schedules a quiz
+  ---
+  duration_ms: 1431.010417
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-02: quiz is inaccessible outside its window (AC-021)
+    # Subtest: students cannot start a quiz before its start time
+    ok 1 - students cannot start a quiz before its start time
+      ---
+      duration_ms: 5.113125
+      type: 'test'
+      ...
+    # Subtest: students cannot start a quiz after its end time
+    ok 2 - students cannot start a quiz after its end time
+      ---
+      duration_ms: 4.686
+      type: 'test'
+      ...
+    # Subtest: students cannot start a quiz that is not scheduled
+    ok 3 - students cannot start a quiz that is not scheduled
+      ---
+      duration_ms: 3.804041
+      type: 'test'
+      ...
+    # Subtest: students can start a quiz inside its window
+    ok 4 - students can start a quiz inside its window
+      ---
+      duration_ms: 5.082333
+      type: 'test'
+      ...
+    # Subtest: an attempt never runs past the end of the window
+    ok 5 - an attempt never runs past the end of the window
+      ---
+      duration_ms: 4.49625
+      type: 'test'
+      ...
+    # Subtest: an attempt started in time can still be resumed and its result viewed after the window
+    ok 6 - an attempt started in time can still be resumed and its result viewed after the window
+      ---
+      duration_ms: 15.829417
+      type: 'test'
+      ...
+    1..6
+ok 2 - TC-Quiz-02: quiz is inaccessible outside its window (AC-021)
+  ---
+  duration_ms: 39.235209
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-02: students only see quizzes according to the schedule
+    # Subtest: open and upcoming quizzes are listed; drafts and unattempted closed quizzes are hidden
+    ok 1 - open and upcoming quizzes are listed; drafts and unattempted closed quizzes are hidden
+      ---
+      duration_ms: 15.887792
+      type: 'test'
+      ...
+    # Subtest: a closed quiz the student attempted stays listed so its result is reachable
+    ok 2 - a closed quiz the student attempted stays listed so its result is reachable
+      ---
+      duration_ms: 8.854209
+      type: 'test'
+      ...
+    1..2
+ok 3 - TC-Quiz-02: students only see quizzes according to the schedule
+  ---
+  duration_ms: 24.857416
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-02: schedule rules
+    # Subtest: works out the schedule status from the current time
+    ok 1 - works out the schedule status from the current time
+      ---
+      duration_ms: 0.802833
+      type: 'test'
+      ...
+    # Subtest: the attempt deadline is the earlier of the timer and the window end
+    ok 2 - the attempt deadline is the earlier of the timer and the window end
+      ---
+      duration_ms: 0.74375
+      type: 'test'
+      ...
+    # Subtest: blank values mean no schedule
+    ok 3 - blank values mean no schedule
+      ---
+      duration_ms: 0.762958
+      type: 'test'
+      ...
+    1..3
+ok 4 - TC-Quiz-02: schedule rules
+  ---
+  duration_ms: 2.409541
+  type: 'suite'
+  ...
+1..4
+# tests 19
+# suites 4
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1946.862959
+
+# FILE: quiz.test.js
+TAP version 13
+# Subtest: TC-Quiz-01: create a quiz
+    # Subtest: instructor creates a quiz with MCQ, True/False and short-answer questions
+    ok 1 - instructor creates a quiz with MCQ, True/False and short-answer questions
+      ---
+      duration_ms: 74.006458
+      type: 'test'
+      ...
+    # Subtest: the saved quiz is retrievable with all its questions and settings
+    ok 2 - the saved quiz is retrievable with all its questions and settings
+      ---
+      duration_ms: 11.704
+      type: 'test'
+      ...
+    # Subtest: new questions are also added to the question bank
+    ok 3 - new questions are also added to the question bank
+      ---
+      duration_ms: 5.632417
+      type: 'test'
+      ...
+    # Subtest: editing or deleting a bank question later does not change the quiz
+    ok 4 - editing or deleting a bank question later does not change the quiz
+      ---
+      duration_ms: 10.489542
+      type: 'test'
+      ...
+    # Subtest: uses defaults for description, showAnswers and marks
+    ok 5 - uses defaults for description, showAnswers and marks
+      ---
+      duration_ms: 5.47875
+      type: 'test'
+      ...
+    # Subtest: admin can create a quiz
+    ok 6 - admin can create a quiz
+      ---
+      duration_ms: 4.788417
+      type: 'test'
+      ...
+    1..6
+ok 1 - TC-Quiz-01: create a quiz
+  ---
+  duration_ms: 1426.651625
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-01: reject invalid quizzes
+    # Subtest: rejects missing or invalid settings
+    ok 1 - rejects missing or invalid settings
+      ---
+      duration_ms: 4.0975
+      type: 'test'
+      ...
+    # Subtest: rejects out-of-range values and wrong types
+    ok 2 - rejects out-of-range values and wrong types
+      ---
+      duration_ms: 3.828667
+      type: 'test'
+      ...
+    # Subtest: rejects a questions list that is not an array or too long
+    ok 3 - rejects a questions list that is not an array or too long
+      ---
+      duration_ms: 7.101083
+      type: 'test'
+      ...
+    # Subtest: rejects badly formed question entries
+    ok 4 - rejects badly formed question entries
+      ---
+      duration_ms: 4.218167
+      type: 'test'
+      ...
+    # Subtest: rejects bank questions that do not exist or were deleted
+    ok 5 - rejects bank questions that do not exist or were deleted
+      ---
+      duration_ms: 4.742125
+      type: 'test'
+      ...
+    # Subtest: rejects invalid new questions and adds nothing to the bank
+    ok 6 - rejects invalid new questions and adds nothing to the bank
+      ---
+      duration_ms: 3.328292
+      type: 'test'
+      ...
+    1..6
+ok 2 - TC-Quiz-01: reject invalid quizzes
+  ---
+  duration_ms: 27.518375
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-01: view quizzes
+    # Subtest: instructors list only their own quizzes; admins list all
+    ok 1 - instructors list only their own quizzes; admins list all
+      ---
+      duration_ms: 11.50925
+      type: 'test'
+      ...
+    # Subtest: another instructor cannot view the quiz but an admin can
+    ok 2 - another instructor cannot view the quiz but an admin can
+      ---
+      duration_ms: 6.995834
+      type: 'test'
+      ...
+    # Subtest: returns 404 for unknown or malformed quiz IDs
+    ok 3 - returns 404 for unknown or malformed quiz IDs
+      ---
+      duration_ms: 2.908667
+      type: 'test'
+      ...
+    1..3
+ok 3 - TC-Quiz-01: view quizzes
+  ---
+  duration_ms: 21.523083
+  type: 'suite'
+  ...
+# Subtest: TC-Auth-03: only instructors and admins can manage quizzes
+    # Subtest: students cannot create, list or view quizzes
+    ok 1 - students cannot create, list or view quizzes
+      ---
+      duration_ms: 7.501584
+      type: 'test'
+      ...
+    # Subtest: requests without a token are rejected
+    ok 2 - requests without a token are rejected
+      ---
+      duration_ms: 2.421
+      type: 'test'
+      ...
+    1..2
+ok 4 - TC-Auth-03: only instructors and admins can manage quizzes
+  ---
+  duration_ms: 10.027958
+  type: 'suite'
+  ...
+1..4
+# tests 17
+# suites 4
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1883.740583
+
+# FILE: results-export.test.js
+TAP version 13
+# Subtest: TC-Quiz-07: export quiz results as CSV (AC-026)
+    # Subtest: one row per student attempt with the score and timestamps
+    ok 1 - one row per student attempt with the score and timestamps
+      ---
+      duration_ms: 654.338208
+      type: 'test'
+      ...
+    # Subtest: attempts in progress are listed without a score, and timed-out ones as auto-submitted
+    ok 2 - attempts in progress are listed without a score, and timed-out ones as auto-submitted
+      ---
+      duration_ms: 574.023959
+      type: 'test'
+      ...
+    # Subtest: a quiz with no attempts exports just the header row
+    ok 3 - a quiz with no attempts exports just the header row
+      ---
+      duration_ms: 607.5995
+      type: 'test'
+      ...
+    # Subtest: text that looks like a spreadsheet formula is kept as plain text
+    ok 4 - text that looks like a spreadsheet formula is kept as plain text
+      ---
+      duration_ms: 584.747291
+      type: 'test'
+      ...
+    # Subtest: an older attempt with no grading is graded during export
+    ok 5 - an older attempt with no grading is graded during export
+      ---
+      duration_ms: 562.904666
+      type: 'test'
+      ...
+    # Subtest: only the quiz owner or an admin can export
+    ok 6 - only the quiz owner or an admin can export
+      ---
+      duration_ms: 572.699583
+      type: 'test'
+      ...
+    1..6
+ok 1 - TC-Quiz-07: export quiz results as CSV (AC-026)
+  ---
+  duration_ms: 4850.904833
+  type: 'suite'
+  ...
+# Subtest: TC-Quiz-07: CSV formatting rules
+    # Subtest: quotes commas, quotes and line breaks; leaves numbers alone
+    ok 1 - quotes commas, quotes and line breaks; leaves numbers alone
+      ---
+      duration_ms: 1.500084
+      type: 'test'
+      ...
+    # Subtest: file names are safe and dated
+    ok 2 - file names are safe and dated
+      ---
+      duration_ms: 1.273291
+      type: 'test'
+      ...
+    1..2
+ok 2 - TC-Quiz-07: CSV formatting rules
+  ---
+  duration_ms: 2.900666
+  type: 'suite'
+  ...
+1..2
+# tests 8
+# suites 2
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5310.538292
+
+# FILE: sprint2-security.test.js
+TAP version 13
+# ◇ injected env (5) from .env
+# Subtest: registration creates an in-app welcome notification and sends email
+ok 1 - registration creates an in-app welcome notification and sends email
+  ---
+  duration_ms: 1654.588875
+  type: 'test'
+  ...
+# Subtest: users can only list and mark their own notifications
+ok 2 - users can only list and mark their own notifications
+  ---
+  duration_ms: 1094.459666
+  type: 'test'
+  ...
+# Subtest: access tokens expire and refresh tokens rotate with reuse revocation
+ok 3 - access tokens expire and refresh tokens rotate with reuse revocation
+  ---
+  duration_ms: 549.89875
+  type: 'test'
+  ...
+# Subtest: JSON input rejects Mongo operators and executable HTML payloads
+ok 4 - JSON input rejects Mongo operators and executable HTML payloads
+  ---
+  duration_ms: 2.588958
+  type: 'test'
+  ...
+# Subtest: authentication limiter throttles requests and emits standard limits
+ok 5 - authentication limiter throttles requests and emits standard limits
+  ---
+  duration_ms: 2.880834
+  type: 'test'
+  ...
+# Subtest: liveness and database readiness are reported independently
+ok 6 - liveness and database readiness are reported independently
+  ---
+  duration_ms: 2.596125
+  type: 'test'
+  ...
+# Subtest: production transport rejects plain HTTP and server requires TLS termination
+ok 7 - production transport rejects plain HTTP and server requires TLS termination
+  ---
+  duration_ms: 1.403292
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3757.25025
+

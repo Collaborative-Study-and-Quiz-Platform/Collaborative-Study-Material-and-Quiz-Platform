@@ -1,0 +1,69 @@
+-----------------------------------|---------|----------|---------|---------|-----------------------
+File                               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s     
+-----------------------------------|---------|----------|---------|---------|-----------------------
+All files                          |   93.81 |    90.04 |   97.23 |   93.81 |                       
+ src                               |   75.32 |    44.44 |     100 |   75.32 |                       
+  app.js                           |   75.32 |    44.44 |     100 |   75.32 | ...,30-33,59-63,65-69 
+ src/config                        |    55.1 |    41.66 |   66.66 |    55.1 |                       
+  auth.js                          |    55.1 |    41.66 |   66.66 |    55.1 | ...,33-34,38-39,43-44 
+ src/middleware                    |   92.02 |       92 |   88.88 |   92.02 |                       
+  authenticateToken.js             |   89.13 |    94.11 |     100 |   89.13 | 20-24                 
+  authorizeRoles.js                |     100 |    92.85 |     100 |     100 | 14                    
+  rateLimit.js                     |   84.44 |    66.66 |     100 |   84.44 | 4-5,22-26             
+  requireSecureTransport.js        |     100 |      100 |     100 |     100 |                       
+  sanitizeJsonBody.js              |   93.87 |      100 |      75 |   93.87 | 24-26                 
+ src/models                        |     100 |      100 |     100 |     100 |                       
+  Attempt.js                       |     100 |      100 |     100 |     100 |                       
+  Bookmark.js                      |     100 |      100 |     100 |     100 |                       
+  Material.js                      |     100 |      100 |     100 |     100 |                       
+  MaterialComment.js               |     100 |      100 |     100 |     100 |                       
+  MaterialRating.js                |     100 |      100 |     100 |     100 |                       
+  Notification.js                  |     100 |      100 |     100 |     100 |                       
+  PasswordResetToken.js            |     100 |      100 |     100 |     100 |                       
+  Question.js                      |     100 |      100 |     100 |     100 |                       
+  Quiz.js                          |     100 |      100 |     100 |     100 |                       
+  RefreshToken.js                  |     100 |      100 |     100 |     100 |                       
+  User.js                          |     100 |      100 |     100 |     100 |                       
+ src/modules/attempt               |   96.78 |    90.44 |     100 |   96.78 |                       
+  attempt.controller.js            |   96.62 |    90.37 |     100 |   96.62 | ...04,412-413,453-454 
+  attempt.routes.js                |     100 |      100 |     100 |     100 |                       
+ src/modules/auth                  |   79.42 |    76.19 |      90 |   79.42 |                       
+  auth.controller.js               |   75.26 |     75.8 |      90 |   75.26 | ...59,265-269,275-276 
+  auth.routes.js                   |     100 |      100 |     100 |     100 |                       
+ src/modules/grading               |   97.52 |    92.73 |     100 |   97.52 |                       
+  grading.service.js               |     100 |      100 |     100 |     100 |                       
+  manualGrading.controller.js      |   95.88 |    88.78 |     100 |   95.88 | ...41,292-293,330-331 
+  manualGrading.routes.js          |     100 |      100 |     100 |     100 |                       
+  resultsCsv.js                    |     100 |    97.05 |     100 |     100 | 29                    
+ src/modules/material              |    98.6 |    95.54 |     100 |    98.6 |                       
+  bookmark.controller.js           |     100 |    93.47 |     100 |     100 | 31,60                 
+  material.controller.js           |   96.87 |    92.53 |     100 |   96.87 | 63-64,121-122,172-173 
+  material.routes.js               |   97.61 |     92.3 |     100 |   97.61 | 57-58                 
+  material.validation.js           |   97.14 |     90.9 |     100 |   97.14 | 14                    
+  materialComment.controller.js    |   98.29 |    96.59 |     100 |   98.29 | 57-58                 
+  materialFile.controller.js       |     100 |    93.02 |     100 |     100 | 64,67-68              
+  materialManagement.controller.js |     100 |      100 |     100 |     100 |                       
+  materialRating.controller.js     |     100 |    98.03 |     100 |     100 | 59                    
+  materialRating.service.js        |     100 |      100 |     100 |     100 |                       
+  materialStorage.js               |     100 |      100 |     100 |     100 |                       
+ src/modules/notification          |   79.61 |    62.06 |      80 |   79.61 |                       
+  notification.controller.js       |    62.5 |    36.36 |   66.66 |    62.5 | ...,35-36,48-49,52-62 
+  notification.routes.js           |     100 |      100 |     100 |     100 |                       
+  notification.service.js          |   89.61 |    76.47 |     100 |   89.61 | ...,55-56,62-63,71-72 
+ src/modules/passwordReset         |   86.31 |       64 |     100 |   86.31 |                       
+  passwordReset.controller.js      |   86.31 |       64 |     100 |   86.31 | ...53,162-165,183-187 
+ src/modules/questionBank          |   95.86 |    89.15 |     100 |   95.86 |                       
+  duplicateDetection.js            |   97.67 |    95.83 |     100 |   97.67 | 56-57                 
+  questionBank.controller.js       |   97.04 |    93.29 |     100 |   97.04 | ...10,437-438,457-458 
+  questionBank.routes.js           |    88.7 |       80 |     100 |    88.7 | 39-43,45-46           
+  questionImport.controller.js     |   97.63 |       90 |     100 |   97.63 | 64-65,161-162         
+  questionImport.parser.js         |   94.33 |    81.73 |     100 |   94.33 | ...39,249-250,281-282 
+ src/modules/quiz                  |    98.2 |    95.65 |     100 |    98.2 |                       
+  availableQuiz.controller.js      |   98.01 |       95 |     100 |   98.01 | 95-96                 
+  availableQuiz.routes.js          |     100 |      100 |     100 |     100 |                       
+  quiz.controller.js               |   97.53 |    93.45 |     100 |   97.53 | ...36,268-269,315-316 
+  quiz.routes.js                   |     100 |      100 |     100 |     100 |                       
+  quizSchedule.js                  |     100 |      100 |     100 |     100 |                       
+ src/scripts                       |    40.9 |    28.57 |      50 |    40.9 |                       
+  seedAdmin.js                     |    40.9 |    28.57 |      50 |    40.9 | ...,21-26,36-50,53-64 
+-----------------------------------|---------|----------|---------|---------|-----------------------

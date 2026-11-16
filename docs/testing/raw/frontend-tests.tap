@@ -1,0 +1,806 @@
+# FILE: analytics-dashboard.test.mjs
+TAP version 13
+# 9:01:07 AM [vite] (client) Re-optimizing dependencies because vite config has changed
+# Subtest: TC-Perf-03 dashboard renders charts for the seeded dataset
+    # Subtest: student dashboard draws the line chart and the topic bar chart
+    ok 1 - student dashboard draws the line chart and the topic bar chart
+      ---
+      duration_ms: 11.413459
+      type: 'test'
+      ...
+    # Subtest: instructor dashboard draws the score distribution and the question success rate
+    ok 2 - instructor dashboard draws the score distribution and the question success rate
+      ---
+      duration_ms: 6.600459
+      type: 'test'
+      ...
+    # Subtest: neither dashboard shows NaN, undefined or null values
+    ok 3 - neither dashboard shows NaN, undefined or null values
+      ---
+      duration_ms: 11.270083
+      type: 'test'
+      ...
+    # Subtest: every chart is also available as a table with the same rows
+    ok 4 - every chart is also available as a table with the same rows
+      ---
+      duration_ms: 7.033709
+      type: 'test'
+      ...
+    # Subtest: the sample note only shows for sample data
+    ok 5 - the sample note only shows for sample data
+      ---
+      duration_ms: 3.426375
+      type: 'test'
+      ...
+    1..5
+ok 1 - TC-Perf-03 dashboard renders charts for the seeded dataset
+  ---
+  duration_ms: 196.352083
+  type: 'suite'
+  ...
+# Subtest: empty and partial reports
+    # Subtest: a student with no completed quizzes sees a message instead of charts
+    ok 1 - a student with no completed quizzes sees a message instead of charts
+      ---
+      duration_ms: 0.309291
+      type: 'test'
+      ...
+    # Subtest: a missing report does not crash either dashboard
+    ok 2 - a missing report does not crash either dashboard
+      ---
+      duration_ms: 0.378625
+      type: 'test'
+      ...
+    # Subtest: a quiz with only one completed attempt still draws a chart
+    ok 3 - a quiz with only one completed attempt still draws a chart
+      ---
+      duration_ms: 2.50925
+      type: 'test'
+      ...
+    # Subtest: attempts waiting for manual grading are noted and left out of the trend
+    ok 4 - attempts waiting for manual grading are noted and left out of the trend
+      ---
+      duration_ms: 3.571583
+      type: 'test'
+      ...
+    1..4
+ok 2 - empty and partial reports
+  ---
+  duration_ms: 6.867208
+  type: 'suite'
+  ...
+# Subtest: chart data helpers
+    # Subtest: the seeded reports are consistent with each other
+    ok 1 - the seeded reports are consistent with each other
+      ---
+      duration_ms: 0.083125
+      type: 'test'
+      ...
+    # Subtest: topics are listed weakest first
+    ok 2 - topics are listed weakest first
+      ---
+      duration_ms: 0.429584
+      type: 'test'
+      ...
+    # Subtest: questions keep quiz order and are coloured by success rate
+    ok 3 - questions keep quiz order and are coloured by success rate
+      ---
+      duration_ms: 0.077375
+      type: 'test'
+      ...
+    # Subtest: formats percentages, labels and trends
+    ok 4 - formats percentages, labels and trends
+      ---
+      duration_ms: 0.055083
+      type: 'test'
+      ...
+    1..4
+ok 3 - chart data helpers
+  ---
+  duration_ms: 0.714208
+  type: 'suite'
+  ...
+1..3
+# tests 13
+# suites 3
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 424.837958
+
+# FILE: analytics-export.test.mjs
+TAP version 13
+# Subtest: TC-Perf-04 the exported file matches the on-screen report
+    # Subtest: the exported tables have the same titles, headings and rows as the page
+    ok 1 - the exported tables have the same titles, headings and rows as the page
+      ---
+      duration_ms: 21.664833
+      type: 'test'
+      ...
+    # Subtest: the exported summary shows the same numbers as the summary cards
+    ok 2 - the exported summary shows the same numbers as the summary cards
+      ---
+      duration_ms: 11.824416
+      type: 'test'
+      ...
+    # Subtest: the CSV has a title block, a summary and one block per table
+    ok 3 - the CSV has a title block, a summary and one block per table
+      ---
+      duration_ms: 1.010792
+      type: 'test'
+      ...
+    # Subtest: the instructor CSV holds the class numbers
+    ok 4 - the instructor CSV holds the class numbers
+      ---
+      duration_ms: 0.160125
+      type: 'test'
+      ...
+    # Subtest: sample data is labelled as sample data in the file
+    ok 5 - sample data is labelled as sample data in the file
+      ---
+      duration_ms: 2.640208
+      type: 'test'
+      ...
+    # Subtest: a report with no results exports a short note and no tables
+    ok 6 - a report with no results exports a short note and no tables
+      ---
+      duration_ms: 0.156667
+      type: 'test'
+      ...
+    1..6
+ok 1 - TC-Perf-04 the exported file matches the on-screen report
+  ---
+  duration_ms: 145.676833
+  type: 'suite'
+  ...
+# Subtest: CSV safety
+    # Subtest: commas, quotes and line breaks stay inside their cell
+    ok 1 - commas, quotes and line breaks stay inside their cell
+      ---
+      duration_ms: 0.076
+      type: 'test'
+      ...
+    # Subtest: text that Excel could run as a formula is made harmless
+    ok 2 - text that Excel could run as a formula is made harmless
+      ---
+      duration_ms: 0.055666
+      type: 'test'
+      ...
+    1..2
+ok 2 - CSV safety
+  ---
+  duration_ms: 0.190458
+  type: 'suite'
+  ...
+# Subtest: PDF file
+    # Subtest: is a well formed PDF: header, byte offsets, page count, end marker
+    ok 1 - is a well formed PDF: header, byte offsets, page count, end marker
+      ---
+      duration_ms: 1.142417
+      type: 'test'
+      ...
+    # Subtest: shows the same text as the page
+    ok 2 - shows the same text as the page
+      ---
+      duration_ms: 1.178041
+      type: 'test'
+      ...
+    # Subtest: long tables continue on the next page with the headings repeated
+    ok 3 - long tables continue on the next page with the headings repeated
+      ---
+      duration_ms: 4.172083
+      type: 'test'
+      ...
+    # Subtest: long words and unusual characters do not break the file
+    ok 4 - long words and unusual characters do not break the file
+      ---
+      duration_ms: 0.687792
+      type: 'test'
+      ...
+    # Subtest: text is cleaned before it goes into the PDF
+    ok 5 - text is cleaned before it goes into the PDF
+      ---
+      duration_ms: 0.048875
+      type: 'test'
+      ...
+    1..5
+ok 3 - PDF file
+  ---
+  duration_ms: 7.323292
+  type: 'suite'
+  ...
+# Subtest: file names and buttons
+    # Subtest: file names say what is inside and when it was made
+    ok 1 - file names say what is inside and when it was made
+      ---
+      duration_ms: 0.168875
+      type: 'test'
+      ...
+    # Subtest: both dashboards offer the two downloads once there is data
+    ok 2 - both dashboards offer the two downloads once there is data
+      ---
+      duration_ms: 7.042792
+      type: 'test'
+      ...
+    # Subtest: there are no download buttons when there is nothing to export
+    ok 3 - there are no download buttons when there is nothing to export
+      ---
+      duration_ms: 0.459458
+      type: 'test'
+      ...
+    1..3
+ok 4 - file names and buttons
+  ---
+  duration_ms: 7.727083
+  type: 'suite'
+  ...
+1..4
+# tests 16
+# suites 4
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 365.764459
+
+# FILE: dashboard-cards.test.mjs
+TAP version 13
+# Subtest: student dashboard has exactly four cards and My Bookmarks uses the existing destination
+ok 1 - student dashboard has exactly four cards and My Bookmarks uses the existing destination
+  ---
+  duration_ms: 364.638625
+  type: 'test'
+  ...
+# Subtest: instructor dashboard retains exactly the five existing functional cards and destinations
+ok 2 - instructor dashboard retains exactly the five existing functional cards and destinations
+  ---
+  duration_ms: 4.884541
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 845.886958
+
+# FILE: material-actions.test.mjs
+TAP version 13
+# Subtest: Student rows retain View and Download; instructor rows have View only
+ok 1 - Student rows retain View and Download; instructor rows have View only
+  ---
+  duration_ms: 111.974584
+  type: 'test'
+  ...
+# Subtest: instructor preview fallback has no Download action for PDF, DOCX or PPT
+ok 2 - instructor preview fallback has no Download action for PDF, DOCX or PPT
+  ---
+  duration_ms: 1.144833
+  type: 'test'
+  ...
+# Subtest: one shared library preserves Student heading and shows instructor My Uploads
+ok 3 - one shared library preserves Student heading and shows instructor My Uploads
+  ---
+  duration_ms: 2.221208
+  type: 'test'
+  ...
+# Subtest: optional Comments control preserves the MaterialActions API and exposes panel state
+ok 4 - optional Comments control preserves the MaterialActions API and exposes panel state
+  ---
+  duration_ms: 0.43325
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 319.022458
+
+# FILE: material-bookmark-lifecycle.test.mjs
+TAP version 13
+# Subtest: focus refresh preserves actions, preview, active download and disclosure nodes through success and failure
+ok 1 - focus refresh preserves actions, preview, active download and disclosure nodes through success and failure
+  ---
+  duration_ms: 380.904333
+  type: 'test'
+  ...
+# Subtest: initial loading/error remains blocking until retry succeeds
+ok 2 - initial loading/error remains blocking until retry succeeds
+  ---
+  duration_ms: 11.638083
+  type: 'test'
+  ...
+# Subtest: download responses reconcile both rendered views and stale responses cannot lower counts
+ok 3 - download responses reconcile both rendered views and stale responses cannot lower counts
+  ---
+  duration_ms: 685.023958
+  type: 'test'
+  ...
+# Subtest: token transition issues one read; navigation/focus revalidate and account changes reject old responses
+ok 4 - token transition issues one read; navigation/focus revalidate and account changes reject old responses
+  ---
+  duration_ms: 64.703583
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1493.216166
+
+# FILE: material-bookmarks.test.mjs
+TAP version 13
+# Subtest: bookmark button exposes saved/unsaved state, pending and role restrictions
+ok 1 - bookmark button exposes saved/unsaved state, pending and role restrictions
+  ---
+  duration_ms: 113.83
+  type: 'test'
+  ...
+# Subtest: My Bookmarks reuses material actions and accessible loading, empty, error and success states
+ok 2 - My Bookmarks reuses material actions and accessible loading, empty, error and success states
+  ---
+  duration_ms: 4.388334
+  type: 'test'
+  ...
+# Subtest: shared state toggles, blocks duplicate pending clicks and sends authenticated idempotent methods
+ok 3 - shared state toggles, blocks duplicate pending clicks and sends authenticated idempotent methods
+  ---
+  duration_ms: 0.838916
+  type: 'test'
+  ...
+# Subtest: older reads cannot overwrite mutations and disposed account responses cannot update state
+ok 4 - older reads cannot overwrite mutations and disposed account responses cannot update state
+  ---
+  duration_ms: 0.180291
+  type: 'test'
+  ...
+# Subtest: failed writes reconcile ambiguous outcomes and keep accessible error feedback
+ok 5 - failed writes reconcile ambiguous outcomes and keep accessible error feedback
+  ---
+  duration_ms: 0.179333
+  type: 'test'
+  ...
+# Subtest: failed refresh disables mutations until retry and concurrent writes keep both results
+ok 6 - failed refresh disables mutations until retry and concurrent writes keep both results
+  ---
+  duration_ms: 0.159583
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 321.796208
+
+# FILE: material-comments.test.mjs
+TAP version 13
+# Subtest: comments are lazy, row-local and accessible; students and instructors retain existing file restrictions
+ok 1 - comments are lazy, row-local and accessible; students and instructors retain existing file restrictions
+  ---
+  duration_ms: 218.883208
+  type: 'test'
+  ...
+# Subtest: initial loading, failure and retry are distinct from an empty successful page
+ok 2 - initial loading, failure and retry are distinct from an empty successful page
+  ---
+  duration_ms: 48.351
+  type: 'test'
+  ...
+# Subtest: POST immediately prepends the confirmed comment without reload and clears the successful draft
+ok 3 - POST immediately prepends the confirmed comment without reload and clears the successful draft
+  ---
+  duration_ms: 35.900334
+  type: 'test'
+  ...
+# Subtest: pending POST guards duplicate submissions and preserves the draft after a validation error
+ok 4 - pending POST guards duplicate submissions and preserves the draft after a validation error
+  ---
+  duration_ms: 50.092459
+  type: 'test'
+  ...
+# Subtest: ambiguous network failure is never automatically reposted; refresh can reveal the saved comment
+ok 5 - ambiguous network failure is never automatically reposted; refresh can reveal the saved comment
+  ---
+  duration_ms: 53.446167
+  type: 'test'
+  ...
+# Subtest: refresh and older-page loading are bounded, deduplicated and leave confirmed data on errors
+ok 6 - refresh and older-page loading are bounded, deduplicated and leave confirmed data on errors
+  ---
+  duration_ms: 46.411709
+  type: 'test'
+  ...
+# Subtest: a stale refresh cannot replace a newly posted comment or corrupt its older-page cursor
+ok 7 - a stale refresh cannot replace a newly posted comment or corrupt its older-page cursor
+  ---
+  duration_ms: 51.616916
+  type: 'test'
+  ...
+# Subtest: plain text rendering never creates markup and missing authors have a safe fallback
+ok 8 - plain text rendering never creates markup and missing authors have a safe fallback
+  ---
+  duration_ms: 13.598166
+  type: 'test'
+  ...
+# Subtest: missing parent disables posting and refresh instead of displaying an empty discussion
+ok 9 - missing parent disables posting and refresh instead of displaying an empty discussion
+  ---
+  duration_ms: 14.253417
+  type: 'test'
+  ...
+# Subtest: material/session changes cancel old reads, reset drafts and reject stale responses
+ok 10 - material/session changes cancel old reads, reset drafts and reject stale responses
+  ---
+  duration_ms: 67.086333
+  type: 'test'
+  ...
+# Subtest: closing the panel aborts an in-flight POST and ignores its eventual response
+ok 11 - closing the panel aborts an in-flight POST and ignores its eventual response
+  ---
+  duration_ms: 77.333125
+  type: 'test'
+  ...
+# Subtest: comment interactions preserve material filters, disclosure nodes, preview and an active download
+ok 12 - comment interactions preserve material filters, disclosure nodes, preview and an active download
+  ---
+  duration_ms: 341.444291
+  type: 'test'
+  ...
+# Subtest: a parent 404 during an in-flight POST remains authoritative over a late 201 response
+ok 13 - a parent 404 during an in-flight POST remains authoritative over a late 201 response
+  ---
+  duration_ms: 63.139917
+  type: 'test'
+  ...
+# Subtest: POST 404 remains terminal after a pending GET success
+ok 14 - POST 404 remains terminal after a pending GET success
+  ---
+  duration_ms: 76.266041
+  type: 'test'
+  ...
+# Subtest: POST 404 remains terminal after a pending GET HTTP failure
+ok 15 - POST 404 remains terminal after a pending GET HTTP failure
+  ---
+  duration_ms: 80.617417
+  type: 'test'
+  ...
+# Subtest: POST 404 remains terminal after a pending GET network failure
+ok 16 - POST 404 remains terminal after a pending GET network failure
+  ---
+  duration_ms: 81.98925
+  type: 'test'
+  ...
+# Subtest: a fresh material can load normally after terminal unavailability while the old GET finishes
+ok 17 - a fresh material can load normally after terminal unavailability while the old GET finishes
+  ---
+  duration_ms: 101.061208
+  type: 'test'
+  ...
+# Subtest: a fresh session can load normally after terminal unavailability while the old GET finishes
+ok 18 - a fresh session can load normally after terminal unavailability while the old GET finishes
+  ---
+  duration_ms: 101.780792
+  type: 'test'
+  ...
+# Subtest: a late POST error cannot overwrite a GET-confirmed unavailable message
+ok 19 - a late POST error cannot overwrite a GET-confirmed unavailable message
+  ---
+  duration_ms: 70.186334
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1968.670542
+
+# FILE: material-integration.test.mjs
+TAP version 13
+# Subtest: rating in Browse and Bookmarks synchronizes summaries and preserves comments and row state
+ok 1 - rating in Browse and Bookmarks synchronizes summaries and preserves comments and row state
+  ---
+  duration_ms: 242.189125
+  type: 'test'
+  ...
+# Subtest: late bookmark refresh cannot overwrite a confirmed rating; later refresh accepts server updates
+ok 2 - late bookmark refresh cannot overwrite a confirmed rating; later refresh accepts server updates
+  ---
+  duration_ms: 45.1305
+  type: 'test'
+  ...
+# Subtest: late Browse search cannot overwrite rating confirmed after the search started
+ok 3 - late Browse search cannot overwrite rating confirmed after the search started
+  ---
+  duration_ms: 35.412834
+  type: 'test'
+  ...
+# Subtest: instructor retains View, Edit/Delete, Comments and read-only Rating controls
+ok 4 - instructor retains View, Edit/Delete, Comments and read-only Rating controls
+  ---
+  duration_ms: 27.957916
+  type: 'test'
+  ...
+# Subtest: rating confirmations for unbookmarked materials survive bookmark additions and reads
+ok 5 - rating confirmations for unbookmarked materials survive bookmark additions and reads
+  ---
+  duration_ms: 1.350042
+  type: 'test'
+  ...
+# Subtest: new server votes update radio selection without discarding an unchanged-vote draft
+ok 6 - new server votes update radio selection without discarding an unchanged-vote draft
+  ---
+  duration_ms: 35.791375
+  type: 'test'
+  ...
+# Subtest: confirmed votes 5 -> 2 -> 5 never resurrect an unsubmitted draft of 4
+ok 7 - confirmed votes 5 -> 2 -> 5 never resurrect an unsubmitted draft of 4
+  ---
+  duration_ms: 36.145833
+  type: 'test'
+  ...
+# Subtest: confirmed unrated -> rated -> unrated transitions discard stale drafts
+ok 8 - confirmed unrated -> rated -> unrated transitions discard stale drafts
+  ---
+  duration_ms: 46.322334
+  type: 'test'
+  ...
+# Subtest: unchanged votes preserve drafts across summary updates and unavailable-summary recovery
+ok 9 - unchanged votes preserve drafts across summary updates and unavailable-summary recovery
+  ---
+  duration_ms: 40.974584
+  type: 'test'
+  ...
+# Subtest: asynchronous rating refresh with an unchanged confirmed vote preserves the draft
+ok 10 - asynchronous rating refresh with an unchanged confirmed vote preserves the draft
+  ---
+  duration_ms: 33.996583
+  type: 'test'
+  ...
+# Subtest: pending submission keeps its payload and applies its confirmed result after external vote changes
+ok 11 - pending submission keeps its payload and applies its confirmed result after external vote changes
+  ---
+  duration_ms: 45.732166
+  type: 'test'
+  ...
+# Subtest: failed submission preserves a draft when the confirmed vote is unchanged
+ok 12 - failed submission preserves a draft when the confirmed vote is unchanged
+  ---
+  duration_ms: 34.2275
+  type: 'test'
+  ...
+# Subtest: failed submission does not restore an invalidated draft
+ok 13 - failed submission does not restore an invalidated draft
+  ---
+  duration_ms: 38.519125
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1017.369333
+
+# FILE: material-management.test.mjs
+TAP version 13
+# Subtest: instructors see management controls; students retain View/Download without Edit/Delete
+ok 1 - instructors see management controls; students retain View/Download without Edit/Delete
+  ---
+  duration_ms: 176.3155
+  type: 'test'
+  ...
+# Subtest: edit is prefilled, validates before requests, saves partial metadata and preserves unaffected disclosure/preview nodes
+ok 2 - edit is prefilled, validates before requests, saves partial metadata and preserves unaffected disclosure/preview nodes
+  ---
+  duration_ms: 71.622958
+  type: 'test'
+  ...
+# Subtest: delete requires confirmation, Cancel/Escape send no mutation and successful removal restores focus
+ok 3 - delete requires confirmation, Cancel/Escape send no mutation and successful removal restores focus
+  ---
+  duration_ms: 68.416709
+  type: 'test'
+  ...
+# Subtest: pending confirmation guards rapid submits; failures retain the dialog for retry
+ok 4 - pending confirmation guards rapid submits; failures retain the dialog for retry
+  ---
+  duration_ms: 83.981458
+  type: 'test'
+  ...
+# Subtest: mutation refresh preserves applied filters and rebuilds filter options without replacing unaffected rows
+ok 5 - mutation refresh preserves applied filters and rebuilds filter options without replacing unaffected rows
+  ---
+  duration_ms: 72.93
+  type: 'test'
+  ...
+# Subtest: background refresh failure keeps existing rows and offers a refresh retry after mutation succeeds
+ok 6 - background refresh failure keeps existing rows and offers a refresh retry after mutation succeeds
+  ---
+  duration_ms: 64.999792
+  type: 'test'
+  ...
+# Subtest: unmount cancels management requests and ignores a late mutation response
+ok 7 - unmount cancels management requests and ignores a late mutation response
+  ---
+  duration_ms: 48.054375
+  type: 'test'
+  ...
+# Subtest: lost successful DELETE response followed by 404 reconciles the list while preserving filters, preview and disclosures
+ok 8 - lost successful DELETE response followed by 404 reconciles the list while preserving filters, preview and disclosures
+  ---
+  duration_ms: 90.185833
+  type: 'test'
+  ...
+# Subtest: DELETE 404 after another tab removes the material closes confirmation and refreshes once
+ok 9 - DELETE 404 after another tab removes the material closes confirmation and refreshes once
+  ---
+  duration_ms: 49.5445
+  type: 'test'
+  ...
+# Subtest: PATCH 404 remains an error without completing or refreshing the list
+ok 10 - PATCH 404 remains an error without completing or refreshing the list
+  ---
+  duration_ms: 39.503291
+  type: 'test'
+  ...
+# Subtest: DELETE 200 and 404 invoke the completion callback exactly once and close exactly once
+ok 11 - DELETE 200 and 404 invoke the completion callback exactly once and close exactly once
+  ---
+  duration_ms: 48.850583
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1166.184459
+
+# FILE: material-rating.test.mjs
+TAP version 13
+# Subtest: compact zero/average display, expand/collapse and accessible native radios
+ok 1 - compact zero/average display, expand/collapse and accessible native radios
+  ---
+  duration_ms: 131.995708
+  type: 'test'
+  ...
+# Subtest: authoritative create/update, two students and persistence preserve exact count
+ok 2 - authoritative create/update, two students and persistence preserve exact count
+  ---
+  duration_ms: 27.180792
+  type: 'test'
+  ...
+# Subtest: instructor sees compact read-only averages without submission controls
+ok 3 - instructor sees compact read-only averages without submission controls
+  ---
+  duration_ms: 1.175584
+  type: 'test'
+  ...
+# Subtest: pending PUT prevents duplicates and replaces summary with server result
+ok 4 - pending PUT prevents duplicates and replaces summary with server result
+  ---
+  duration_ms: 9.664792
+  type: 'test'
+  ...
+# Subtest: failed PUT preserves selection/data and remains retryable without automatic retries
+ok 5 - failed PUT preserves selection/data and remains retryable without automatic retries
+  ---
+  duration_ms: 10.259625
+  type: 'test'
+  ...
+# Subtest: unknown summary loads lazily with loading/error feedback and refresh retry
+ok 6 - unknown summary loads lazily with loading/error feedback and refresh retry
+  ---
+  duration_ms: 6.907917
+  type: 'test'
+  ...
+# Subtest: late GET success cannot overwrite successful PUT or flags
+ok 7 - late GET success cannot overwrite successful PUT or flags
+  ---
+  duration_ms: 7.290375
+  type: 'test'
+  ...
+# Subtest: late GET failure cannot overwrite successful PUT or flags
+ok 8 - late GET failure cannot overwrite successful PUT or flags
+  ---
+  duration_ms: 7.002416
+  type: 'test'
+  ...
+# Subtest: PUT 404 stays authoritative over late GET success, fresh scope recovers
+ok 9 - PUT 404 stays authoritative over late GET success, fresh scope recovers
+  ---
+  duration_ms: 18.39
+  type: 'test'
+  ...
+# Subtest: PUT 404 stays authoritative over late GET failure, fresh scope recovers
+ok 10 - PUT 404 stays authoritative over late GET failure, fresh scope recovers
+  ---
+  duration_ms: 11.178083
+  type: 'test'
+  ...
+# Subtest: material/session changes abort writes and ignore old account responses
+ok 11 - material/session changes abort writes and ignore old account responses
+  ---
+  duration_ms: 6.315
+  type: 'test'
+  ...
+# Subtest: rating preserves filters, mounted rows/actions, preview and expanded disclosures
+ok 12 - rating preserves filters, mounted rows/actions, preview and expanded disclosures
+  ---
+  duration_ms: 245.82725
+  type: 'test'
+  ...
+# Subtest: library session changes hide old own votes and ignore delayed previous-account list reads
+ok 13 - library session changes hide old own votes and ignore delayed previous-account list reads
+  ---
+  duration_ms: 101.956792
+  type: 'test'
+  ...
+# Subtest: malformed average null renders unavailable and a malformed PUT remains recoverable
+ok 14 - malformed average null renders unavailable and a malformed PUT remains recoverable
+  ---
+  duration_ms: 19.421833
+  type: 'test'
+  ...
+# Subtest: malformed average "4.5" renders unavailable and a malformed PUT remains recoverable
+ok 15 - malformed average "4.5" renders unavailable and a malformed PUT remains recoverable
+  ---
+  duration_ms: 14.477916
+  type: 'test'
+  ...
+# Subtest: malformed average -1 renders unavailable and a malformed PUT remains recoverable
+ok 16 - malformed average -1 renders unavailable and a malformed PUT remains recoverable
+  ---
+  duration_ms: 12.838958
+  type: 'test'
+  ...
+# Subtest: malformed average 6 renders unavailable and a malformed PUT remains recoverable
+ok 17 - malformed average 6 renders unavailable and a malformed PUT remains recoverable
+  ---
+  duration_ms: 14.076834
+  type: 'test'
+  ...
+# Subtest: zero-vote GET stays distinct from unavailable; unexpected zero-vote PUT does not format null
+ok 18 - zero-vote GET stays distinct from unavailable; unexpected zero-vote PUT does not format null
+  ---
+  duration_ms: 8.989667
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1013.042958
+

@@ -1,0 +1,8 @@
+Name                  Stmts   Miss Branch BrPart  Cover
+-------------------------------------------------------
+app/__init__.py           0      0      0      0   100%
+app/calculations.py     107      4     36      2    96%
+app/server.py            47      3      8      1    93%
+app/validation.py       111     25     66     22    73%
+-------------------------------------------------------
+TOTAL                   265     32    110     25    85%

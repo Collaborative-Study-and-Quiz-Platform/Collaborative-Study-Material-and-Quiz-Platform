@@ -1,0 +1,35 @@
+test_class_rejects_missing_quiz_and_student_ids (tests.test_api.AnalyticsApiTests.test_class_rejects_missing_quiz_and_student_ids) ... ok
+test_class_report_success (tests.test_api.AnalyticsApiTests.test_class_report_success) ... ok
+test_health_check (tests.test_api.AnalyticsApiTests.test_health_check) ... ok
+test_individual_rejects_missing_fields (tests.test_api.AnalyticsApiTests.test_individual_rejects_missing_fields) ... ok
+test_individual_report_success (tests.test_api.AnalyticsApiTests.test_individual_report_success) ... ok
+test_individual_reports_the_exact_bad_field (tests.test_api.AnalyticsApiTests.test_individual_reports_the_exact_bad_field) ... ok
+test_invalid_json_body_is_rejected (tests.test_api.AnalyticsApiTests.test_invalid_json_body_is_rejected) ... ok
+test_marks_awarded_cannot_exceed_maximum (tests.test_api.AnalyticsApiTests.test_marks_awarded_cannot_exceed_maximum) ... ok
+test_unknown_route_and_wrong_method_return_json_errors (tests.test_api.AnalyticsApiTests.test_unknown_route_and_wrong_method_return_json_errors) ... ok
+test_hundred_percent_lands_in_the_last_bucket (tests.test_calculations.ClassReportTests.test_hundred_percent_lands_in_the_last_bucket) ... ok
+test_in_progress_attempts_are_ignored (tests.test_calculations.ClassReportTests.test_in_progress_attempts_are_ignored) ... ok
+test_no_attempts_gives_an_empty_report (tests.test_calculations.ClassReportTests.test_no_attempts_gives_an_empty_report) ... ok
+test_pending_manual_grading_is_kept_out_of_score_statistics (tests.test_calculations.ClassReportTests.test_pending_manual_grading_is_kept_out_of_score_statistics) ... ok
+test_per_question_success_rate (tests.test_calculations.ClassReportTests.test_per_question_success_rate) ... ok
+test_questions_keep_the_quiz_order (tests.test_calculations.ClassReportTests.test_questions_keep_the_quiz_order) ... ok
+test_score_distribution (tests.test_calculations.ClassReportTests.test_score_distribution) ... ok
+test_summary_matches_hand_calculation (tests.test_calculations.ClassReportTests.test_summary_matches_hand_calculation) ... ok
+test_declining_and_steady_trends (tests.test_calculations.IndividualReportTests.test_declining_and_steady_trends) ... ok
+test_in_progress_attempts_are_ignored (tests.test_calculations.IndividualReportTests.test_in_progress_attempts_are_ignored) ... ok
+test_missing_topic_falls_back_to_uncategorised (tests.test_calculations.IndividualReportTests.test_missing_topic_falls_back_to_uncategorised) ... ok
+test_no_attempts_gives_an_empty_report (tests.test_calculations.IndividualReportTests.test_no_attempts_gives_an_empty_report) ... ok
+test_one_attempt_is_not_enough_for_a_trend (tests.test_calculations.IndividualReportTests.test_one_attempt_is_not_enough_for_a_trend) ... ok
+test_pending_manual_attempt_is_listed_but_not_averaged (tests.test_calculations.IndividualReportTests.test_pending_manual_attempt_is_listed_but_not_averaged) ... ok
+test_strengths_and_weaknesses (tests.test_calculations.IndividualReportTests.test_strengths_and_weaknesses) ... ok
+test_summary_matches_hand_calculation (tests.test_calculations.IndividualReportTests.test_summary_matches_hand_calculation) ... ok
+test_topics_are_grouped_with_correct_percentages (tests.test_calculations.IndividualReportTests.test_topics_are_grouped_with_correct_percentages) ... ok
+test_trend_direction (tests.test_calculations.IndividualReportTests.test_trend_direction) ... ok
+test_trend_is_in_date_order_even_if_input_is_not (tests.test_calculations.IndividualReportTests.test_trend_is_in_date_order_even_if_input_is_not) ... ok
+test_halves_round_up (tests.test_calculations.RoundingTests.test_halves_round_up) ... ok
+test_none_stays_none (tests.test_calculations.RoundingTests.test_none_stays_none) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.026s
+
+OK

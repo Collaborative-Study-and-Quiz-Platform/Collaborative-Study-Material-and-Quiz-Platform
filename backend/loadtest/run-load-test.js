@@ -8,7 +8,6 @@
 // one the unit tests use), creates one test user, then drives the API with 100
 // virtual users and prints a PASS/FAIL table. No real database is touched.
 
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
@@ -19,13 +18,19 @@ const MAX_P90_MS = 2000; // CSQP-NF-001: 90% of responses within 2 seconds
 const TEST_EMAIL = "loadtest@example.com";
 const TEST_PASSWORD = "load-test-password";
 
+function clientAddress(userIndex) {
+  return `10.0.${Math.floor(userIndex / 250)}.${(userIndex % 250) + 1}`;
+}
+
 function buildScenarios(baseUrl, token) {
   const jsonHeaders = { "Content-Type": "application/json" };
-  const loginRequest = () => ({
+  // Each virtual user is a separate student device, so each sends its own client
+  // address. The login rate limit (CSQP-SR-005) still applies per client.
+  const loginRequest = (userIndex) => ({
     url: `${baseUrl}/api/auth/login`,
     options: {
       method: "POST",
-      headers: jsonHeaders,
+      headers: { ...jsonHeaders, "X-Forwarded-For": clientAddress(userIndex) },
       body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD })
     }
   });
@@ -134,6 +139,9 @@ function printReport(outcomes) {
 
 async function main() {
   process.env.JWT_SECRET = process.env.JWT_SECRET || "load-test-secret";
+  // The load generator acts as one trusted proxy in front of the API, so the
+  // rate limiter sees each virtual user's own address (set before app loads).
+  process.env.TRUST_PROXY_HOPS = "1";
 
   const app = require("../src/app");
   const User = require("../src/models/User");
@@ -149,7 +157,8 @@ async function main() {
     const user = await User.create({
       name: "Load Test User",
       email: TEST_EMAIL,
-      password: await bcrypt.hash(TEST_PASSWORD, 12),
+      // The User model hashes the password with bcrypt (cost 12) on save.
+      password: TEST_PASSWORD,
       role: "student"
     });
     const { secret, expiresIn } = getJwtConfig();
